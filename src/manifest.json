@@ -1,0 +1,32 @@
+{
+  "name": "Donut Recorder",
+  "version": "0.1.0",
+  "manifest_version": 2,
+  "description": "A Chrome extension for recording browser interaction and generating scripts",
+  "permissions": [
+    "debugger",
+    "storage",
+    "webNavigation",
+    "tabs",
+    "*://*/"
+  ],
+  "icons" : {
+    "128": "images/app_icon_128.png"
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "browser_action": {
+    "default_icon": "images/icon-black.png",
+    "default_title": "Donut Recorder",
+    "default_popup": "index.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
