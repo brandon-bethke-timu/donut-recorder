@@ -20,25 +20,15 @@
               </template>
             </div>
             <h4 class="settings-block-title">Generator Specific Options</h4>
-            <template v-for="option in myoptions">
-              <input v-bind:id="option.id" v-bind:value="option.value" v-bind:type="option.type" v-model="option.value" v-on:change="save()">
-              <label>{{option.title}}</label>
-            </template>
             <div class="settings-group">
+              <template v-for="option in getActiveOptions(options.generators.active)">
+                <div>
+                  <input v-bind:id="option.id" v-bind:value="option.value" v-bind:type="option.type" v-model="option.value" v-on:change="save()">
+                  <label>{{option.title}}</label>
+                </div>
+              </template>
             </div>
             <h4 class="settings-block-title">Common Options</h4>
-            <div class="settings-group">
-              <label>
-                <input id="settings-headless" type="checkbox" v-model="options.global.headless" @change="save">
-                set <code>headless</code> in puppeteer launch options
-              </label>
-            </div>
-            <div class="settings-group">
-              <label>
-                <input id="settings-waitForNavigation" type="checkbox" v-model="options.global.waitForNavigation" @change="save">
-                add <code>waitForNavigation</code> lines on navigation
-              </label>
-            </div>
             <div class="settings-group">
               <label>
                 <input id="settings-wait" type="textbox" v-model="options.global.wait" @change="save">
@@ -84,8 +74,12 @@
       this.load()
     },
     methods: {
-      save (generator) {
+      getActiveOptions(generator) {
+        return this.options.generators.types.find((element) => element.id === generator).options
+      },
+      save () {
         this.saving = true
+        console.log(JSON.stringify(this.options))
         this.$chrome.storage.local.set({options: this.options }, () => {
           setTimeout(() => {
             this.saving = false

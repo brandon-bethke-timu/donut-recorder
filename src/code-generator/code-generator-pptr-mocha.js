@@ -2,6 +2,11 @@ import messageActions from './message-actions'
 import Block from './block'
 import {global} from './global-settings'
 
+export const options = [
+    { type: "checkbox", name: "headless", title: "headless", value: false, id: "headless"},
+    { type: "checkbox", name: "waitForNavigation", title: "add 'waitForNavigation' lines on navigation", value: true, id: "waitForNavigation"}
+]
+
 const newLine = '\n';
 
 const clickMethod = `const click = async function(path){

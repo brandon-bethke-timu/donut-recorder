@@ -129,8 +129,18 @@
 
         this.$chrome.storage.local.get(['recording', 'options'], ({ recording, options }) => {
           this.recording = recording ? recording : []
+
+          let activeOptions = {}
+          let temp = options.generators.types.find((element) => element.id === options.generators.active).options
+          for(let option in temp){
+            let item = temp[option];
+            activeOptions[item.name] = item.value
+          }
+
+          let generatorOptions = Object.assign(options.global, activeOptions)
           chrome.extension.getBackgroundPage().console.log("Using Code Generator", options.generators.active)
-          let codeGen = new CodeGenerator(options.generators.active, options.global);
+          chrome.extension.getBackgroundPage().console.log("With Options", JSON.stringify(generatorOptions))
+          let codeGen = new CodeGenerator(options.generators.active, generatorOptions);
           this.code = codeGen.generate(this.recording)
           this.showResultsTab = true
           this.storeState()
