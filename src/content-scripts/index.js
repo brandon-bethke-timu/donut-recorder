@@ -4,17 +4,16 @@ import finder from '@medv/finder'
 class EventRecorder {
   constructor () {
     this.previousEvent = null
-    this.initialized = false
   }
 
   start () {
     const events = Object.values(eventsToRecord)
-    if (!this.initialized) {
+    if (!window.eventRecorderInitialized) {
       const boundedRecordEvent = this.recordEvent.bind(this)
       events.forEach(type => {
         window.addEventListener(type, boundedRecordEvent, true)
       })
-      this.initialized = true
+      window.eventRecorderInitialized = true
     }
 
     this.sendMessage({ control: 'event-recorder-started' })
