@@ -1,7 +1,7 @@
 import {global} from './global-settings'
 import yaml from 'js-yaml'
 
-export class CodeGeneratorIL {
+export class CodeGeneratorYaml {
     constructor (options) {
       this._options = Object.assign(global, options)
     }
