@@ -3,36 +3,19 @@ import Block from './block'
 import {global} from './global-settings'
 
 export const options = [
+    { type: "checkbox", name: "mocha", title: "in mocha test format", value: false, id: "mocha"},
     { type: "checkbox", name: "headless", title: "headless", value: false, id: "headless"},
     { type: "checkbox", name: "waitForNavigation", title: "add 'waitForNavigation' lines on navigation", value: true, id: "waitForNavigation"}
 ]
 
-const methodHeader1 = `  const timeoutPromise = (timeout) => new Promise((resolve) => setTimeout(resolve, timeout));\n`
-const methodHeader2 = `  const click = async function(path){
-      let e = await page.waitFor(path, {visible: true})
-      await e.click();
-  }\n`
+const newLine = '\n';
 
-const methodHeader3 = `  const type = async function(path, message){
-      let e = await page.waitFor(path, {visible: true})
-      await e.type(message, {delay: 50});
-  }\n`
+const descHeader = `describe("", async function(){\n`
+const descFooter = `})\n`
+const itemHeader = `  it("", async function(){\n`
+const itemFooter = `  })\n`
 
-const importPuppeteer = `const puppeteer = require('puppeteer');\n`
-
-const header = `const browser = await puppeteer.launch()
-const page = await browser.newPage()\n`
-
-const footer = `await browser.close()`
-
-const asyncOpener = `(async () => {\n`
-
-const wrappedHeader = asyncOpener + methodHeader1 + methodHeader2 + methodHeader3 +`
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()\n`
-
-const wrappedFooter = `  await browser.close()
-})()`
+let indentLevel = 0;
 
 export class CodeGeneratorPuppeteer {
   constructor (options) {
@@ -42,31 +25,130 @@ export class CodeGeneratorPuppeteer {
     this._frameId = 0
     this._allFrames = {}
     this._navigationPromiseSet = false
+    if(this._options.mocha) {
+      indentLevel = 2;
+    }
+
   }
 
   generate (events) {
-    return importPuppeteer + this._getHeader() + this._parseEvents(events) + this._getFooter()
-  }
 
-  addCookies(){
-    let script = ""
-    var cookies = JSON.parse(this._options.cookies)
-    for (var key in cookies) {
-      var keyValue = JSON.stringify(cookies[key])
-      script = script + `  await page.setCookie(${keyValue})\n`
+    let script = this.addImports() + newLine
+    + this.addGlobalVariables() + newLine
+    + this.addGlobalMethods() + newLine
+
+    if(this._options.mocha){
+      script = script + descHeader + newLine
+      + itemHeader
     }
+
+    script = script + this.addSetup()
+    + this._parseEvents(events)
+
+    let block = new Block(this._frameId, indentLevel);
+    block.addLine({value: `browser.close()\n`})
+    const lines = block.getLines()
+    for (let line of lines) {
+      script += script + line.value + newLine
+    }
+
+    if(this._options.mocha){
+      script = script + itemFooter
+      + descFooter
+    }
+
     return script;
   }
 
-  _getHeader () {
-    let hdr = wrappedHeader
-    hdr = this._options.headless ? hdr : hdr.replace('launch()', 'launch({ headless: false })')
-    hdr = hdr + this.addCookies();
-    return hdr
+  addImports(){
+    let result = ''
+    let block = new Block(this._frameId);
+    block.addLine({value: `import puppeteer from 'puppeteer';`})
+
+    this.addBlock(block);
+    for (let block of this._blocks) {
+      const lines = block.getLines()
+      for (let line of lines) {
+        result += line.value + newLine
+      }
+    }
+    this._blocks = [];
+    return result
   }
 
-  _getFooter () {
-    return wrappedFooter
+  addGlobalVariables(){
+    let result = ''
+    let block = new Block(this._frameId);
+    block.addLine({value: `let browser = undefined;`})
+    block.addLine({value: `let page = undefined;`})
+
+    this.addBlock(block);
+    for (let block of this._blocks) {
+      const lines = block.getLines()
+      for (let line of lines) {
+        result += line.value + newLine
+      }
+    }
+    this._blocks = [];
+    return result
+  }
+
+  addGlobalMethods(){
+
+    let result = ''
+    let block = new Block(this._frameId);
+
+    block.addLine({value: `const click = async function(path){`})
+    block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
+    block.addLine({value: `  await e.click()`})
+    block.addLine({value: `}`})
+
+    block.addLine({value: `const type = async function(path, message, press){`})
+    block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
+    block.addLine({value: `  if(press){`})
+    block.addLine({value: `    await e.press(message)`})
+    block.addLine({value: `  } else {`})
+    block.addLine({value: `    await e.type(message, {delay: 50})`})
+    block.addLine({value: `  }`})
+    block.addLine({value: `}`})
+
+    this.addBlock(block);
+    for (let block of this._blocks) {
+      const lines = block.getLines()
+      for (let line of lines) {
+        result += line.value + newLine
+      }
+    }
+    this._blocks = [];
+    return result
+
+  }
+
+  addSetup(){
+    let result = ''
+    let block = new Block(this._frameId, indentLevel);
+    block.addLine({value: `browser = await puppeteer.launch( {headless: false} );`})
+    block.addLine({value: `page = await browser.newPage();`})
+
+    var cookies = JSON.parse(this._options.cookies)
+    for (var key in cookies) {
+      var keyValue = JSON.stringify(cookies[key])
+      block.addLine({value: `await page.setCookie(${keyValue})`})
+    }
+
+    this.addBlock(block);
+    for (let block of this._blocks) {
+      const lines = block.getLines()
+      for (let line of lines) {
+        result += line.value + newLine
+      }
+    }
+    this._blocks = [];
+    return result
+  }
+
+  addBlock(block){
+    this._blocks.push(block)
   }
 
   _parseEvents (events) {
@@ -103,55 +185,60 @@ export class CodeGeneratorPuppeteer {
 
       switch (action) {
         case 'mousemove':
-          this._mousePosition = target;
           break
-        case 'keydown':
-          if (keyCode == this._options.typingTerminator) {
-            this._blocks.push(this._handleKeyDown(target.selector, value))
-          }
-          if (keyCode == 13) {
-            this._blocks.push(this._handleEnter(target.selector))
-          }
-          if (keyCode == 17 && previousEvent && previousEvent.action == 'wait-for*') {
-            this._blocks.push(this._handleWaitFor(this._mousePosition.id, undefined, this._mousePosition.tagName, this._mousePosition.innerText))
-            //this._blocks.push(this._handleWaitFor(id, this._mousePosition.selector, undefined, undefined))
-          }
-          break
-        case 'mousedown':
 
+        case 'keydown':
+
+          if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
+          } else {
+            this._blocks.push(this._handleKeyPress(target.selector, key))
+          }
+          break
+
+        case 'wait-for-text*':
+          this._blocks.push(this._handleWaitFor(undefined, undefined, target.tagName, target.innerText))
+          break;
+
+        case 'click-text*':
+          this._blocks.push(this._handleClickText(undefined, target.tagName, target.innerText))
+          break;
+
+        case 'type-text*':
+          this._blocks.push(this._handleKeyDown(target.selector, value, keyCode))
+          break;
+
+        case 'mousedown':
           if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            const block = new Block(this._frameId)
+            const block = new Block(this._frameId, indentLevel)
             block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
             this._blocks.push(block)
             this._navigationPromiseSet = true
           }
-          if(previousEvent && previousEvent.action == 'click-text*'){
-            this._blocks.push(this._handleClickText(target.id, target.tagName, target.innerText))
-          } else if(previousEvent && previousEvent.action == 'wait-for*'){
-            this._blocks.push(this._handleWaitFor(target.id, target.selector, target.tagName, target.innerText))
-          } else if(previousEvent && previousEvent.keyCode == 17){
-            this._blocks.push(this._handleClickText(target.id, target.tagName, target.innerText))
-          } else {
-            this._blocks.push(this._handleClick(target.selector))
-          }
+          this._blocks.push(this._handleClick(target.selector))
           break
+
         case 'change':
           if (target.tagName === 'SELECT') {
             this._blocks.push(this._handleChange(target.selector, value))
           }
           break
+
         case 'goto*':
           this._blocks.push(this._handleGoto(value, frameId))
           break
+
         case 'viewport*':
           this._blocks.push((this._handleViewport(value.width, value.height)))
           break
+
         case 'navigation*':
           this._blocks.push(this._handleWaitForNavigation())
           break
+
         case 'wait*':
           this._blocks.push(this._handleAddWait(this._options.wait))
           break
+
         case 'set-local-storage*':
           this._blocks.push(this._handleSetLocalStorage())
           break
@@ -160,13 +247,10 @@ export class CodeGeneratorPuppeteer {
 
     this._postProcess()
 
-    const indent = '  '
-    const newLine = `\n`
-
     for (let block of this._blocks) {
       const lines = block.getLines()
       for (let line of lines) {
-        result += indent + line.value + newLine
+        result += line.value + newLine
       }
     }
 
@@ -198,7 +282,7 @@ export class CodeGeneratorPuppeteer {
   }
 
   _handleSetLocalStorage() {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     let script = ""
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
@@ -213,13 +297,13 @@ export class CodeGeneratorPuppeteer {
   }
 
   _handleAddWait(period) {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     block.addLine({ value: `await page.waitFor(${period});`})
     return block
   }
 
   _handleClickText(id, tagName, innerText) {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await click('#${id}')`})
     } else {
@@ -229,7 +313,7 @@ export class CodeGeneratorPuppeteer {
   }
 
   _handleWaitFor(id, selector, tagName, innerText) {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await ${this._frame}.waitFor('#${id}', {visible: true})`})
     } else if(selector) {
@@ -240,38 +324,45 @@ export class CodeGeneratorPuppeteer {
     return block
   }
 
-  _handleEnter() {
-    const block = new Block(this._frameId)
-    block.addLine({value: `await page.keyboard.press('Enter');`})
+  _handleEnter(selector) {
+    const block = new Block(this._frameId, indentLevel)
+    block.addLine({value: `await page.keyboard.press('Enter')`})
     return block
   }
 
   _handleKeyDown (selector, value) {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     block.addLine({ value: `await type('${selector}', '${value}')` })
     return block
   }
 
-  _handleClick (selector) {
-    const block = new Block(this._frameId)
-    block.addLine({ value: `await click("${selector}")`})
+  _handleKeyPress(selector, value) {
+    const block = new Block(this._frameId, indentLevel)
+    block.addLine({value: `await type('${selector}', '${value}', true)`})
     return block
   }
 
-  _handleChange (selector, value) {
-    return new Block(this._frameId, { value: `await ${this._frame}.select('${selector}', '${value}')` })
+  _handleClick (selector) {
+    const block = new Block(this._frameId, indentLevel)
+    block.addLine({ value: `await click("${selector}")`})
+    return block
   }
-
+  _handleChange (selector, value) {
+    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.select('${selector}', '${value}')` })
+    return block
+  }
   _handleGoto (href) {
-    return new Block(this._frameId, { value: `await ${this._frame}.goto('${href}')` })
+    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.goto('${href}')` })
+    return block
   }
 
   _handleViewport (width, height) {
-    return new Block(this._frameId, { value: `await ${this._frame}.setViewport({ width: ${width}, height: ${height} })` })
+    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.setViewport({ width: ${width}, height: ${height} })` })
+    return block
   }
 
   _handleWaitForNavigation () {
-    const block = new Block(this._frameId)
+    const block = new Block(this._frameId, indentLevel)
     if (this._options.waitForNavigation) {
       block.addLine({value: `await navigationPromise`})
     }

@@ -1,23 +1,20 @@
 import {CodeGeneratorCypress} from './code-generator-cypress'
 import {CodeGeneratorPuppeteer, options as pptrOptions} from './code-generator-puppeteer'
-import {CodeGeneratorIL} from './code-generator-il'
-import {CodeGeneratorPptrMocha, options as pptrMochaOptions} from './code-generator-pptr-mocha'
+import {CodeGeneratorYaml} from './code-generator-yaml'
 
 const generators = {
     active: "CodeGeneratorCypress",
     types: [
-        {id: 'CodeGeneratorIL', title: 'IL Generator', options: [] },
+        {id: 'CodeGeneratorYaml', title: 'Yaml Generator', options: [] },
         {id: 'CodeGeneratorCypress', title: 'Cypress Generator', options: [] },
-        {id: 'CodeGeneratorPuppeteer', title: 'Puppeteer Generator', options: pptrOptions },
-        {id: 'CodeGeneratorPptrMocha', title: 'Puppeteer Mocha Generator', options: pptrMochaOptions }
+        {id: 'CodeGeneratorPuppeteer', title: 'Puppeteer Generator', options: pptrOptions }
     ]
 }
 
 const classes = {
     CodeGeneratorCypress,
     CodeGeneratorPuppeteer,
-    CodeGeneratorIL,
-    CodeGeneratorPptrMocha
+    CodeGeneratorYaml
 }
 
 class CodeGenerator {

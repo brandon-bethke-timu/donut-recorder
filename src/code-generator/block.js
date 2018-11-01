@@ -1,39 +1,36 @@
 export default class Block {
-  constructor (frameId, line) {
+  constructor (frameId, indent, line) {
     this._lines = []
     this._frameId = frameId
-    this._indent = 0
+    this._indent = indent
 
-    if (line) {
-      line.frameId = this._frameId
-      this._lines.push(line)
+    if(line) {
+      this.addLine(line)
     }
   }
 
   addLineToTop (line) {
     line.frameId = this._frameId
-    this._lines.unshift(line)
+    this._lines.unshift(this.indent(line))
   }
 
   addLine (line) {
     line.frameId = this._frameId
-    this._lines.push(line)
+    this._lines.push(this.indent(line))
   }
 
-  indent(value){
-    this._indent = value;
-  }
-
-  getLines () {
-    if(this._indent > 0){
+  indent(line){
+    if(this._indent && this._indent > 0){
       let indentation = "";
       for(let i = 0; i < this._indent; i++){
         indentation = indentation + "  ";
       }
-      for (let line of this._lines){
-        line.value = indentation + line.value;
-      }
+      line.value = indentation + line.value;
     }
+    return line;
+  }
+
+  getLines () {
     return this._lines;
   }
 }

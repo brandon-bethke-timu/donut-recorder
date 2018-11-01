@@ -7,11 +7,11 @@ Donut recorder is a Chrome extension that records your browser interactions and 
 1. Click the icon and then click 'Record'.
 2. Perform ui actions.
 3. Click 'Pause' to temporarily stop recording actions. Click 'Resume' to continue recording.
-4. Click 'Stop' to stop recording and code will be generated. 
+4. Click 'Stop' to stop recording and code will be generated.
 
 ## Advanced Usage
 - Tapping <kbd>alt</kbd> after typing in an `input` element will cause all the immediately preceeding and grouped keydown events to be emmitted as a single command. The keycode is configurable in the options.
-  
+
 - Tap <kbd>control</kbd>, then click on an element. This will emit code that attempts to match an element by the innerText rather than css path and then click on it.
 
 - Click the 'Wait For' button, then mouse over an element and press the <kbd>control</kbd> key. This will emit code to wait for an element to appear in the DOM that matches the innerText.
@@ -33,18 +33,15 @@ The events recorded are configured in the /context-scripts/dom-events-to-record.
 
 #### Code Generators
 The following code generators are included:
-  
+
 - Cypress
 
   Outputs the recorded events for use with [Cypress](https://docs.cypress.io). This is the default code generator.
-  
+
 - Puppeteer
 
   Outputs the recorded events for use with [Puppeteer](https://pptr.dev/)
-  
-- Puppeteer in mocha test format
-
-  Outputs the recorded events for use with [Puppeteer](https://pptr.dev) but run with [Mocha](https://mochajs.org/)
+  Can be configured to output in [Mocha](https://mochajs.org/) format
 
 - YAML
 

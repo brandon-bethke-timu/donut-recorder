@@ -90,8 +90,7 @@ export class CodeGeneratorCypress {
 
   addSetup(){
     let result = ''
-    let block = new Block(this._frameId);
-    block.indent(2)
+    let block = new Block(this._frameId, 2);
     var cookies = JSON.parse(this._options.cookies)
     for (var key in cookies) {
       var keyValue = JSON.stringify(cookies[key])
@@ -169,8 +168,7 @@ export class CodeGeneratorCypress {
 
         case 'mousedown':
           if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            const block = new Block(this._frameId)
-            block.indent(1);
+            const block = new Block(this._frameId, 1)
             block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
             this._blocks.push(block)
             this._navigationPromiseSet = true
@@ -244,7 +242,7 @@ export class CodeGeneratorCypress {
 
   _handleSetLocalStorage() {
     const block = new Block(this._frameId)
-    block.indent(1);
+    block.indent(2);
     let script = ""
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
@@ -257,15 +255,13 @@ export class CodeGeneratorCypress {
   }
 
   _handleAddWait(period) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     block.addLine({ value: `cy.wait(${period});`})
     return block
   }
 
   _handleClickText(id, tagName, innerText) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').click({force: true})`})
     } else {
@@ -275,8 +271,7 @@ export class CodeGeneratorCypress {
   }
 
   _handleWaitFor(id, selector, tagName, innerText) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').should('be.visible')`})
     } else if(selector) {
@@ -295,40 +290,34 @@ export class CodeGeneratorCypress {
   }
 
   _handleKeyPress(selector, value) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     block.addLine({value: `cy.get('${selector}').type('${value}', {delay: 50})`})
     return block
   }
 
   _handleClick (selector) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     block.addLine({ value: `cy.get("${selector}").click({force: true})`})
     return block
   }
 
   _handleChange (selector, value) {
-    const block = new Block(this._frameId, { value: `cy.get('${selector}').select('${value}')` })
-    block.indent(1);
+    const block = new Block(this._frameId, 2, { value: `cy.get('${selector}').select('${value}')` })
     return block
   }
 
   _handleGoto (href) {
-    const block = new Block(this._frameId, { value: `cy.visit('${href}')` })
-    block.indent(1);
+    const block = new Block(this._frameId, 2, { value: `cy.visit('${href}')` })
     return block
   }
 
   _handleViewport (width, height) {
-    const block = new Block(this._frameId, { value: `cy.viewport(${width}, ${height})` })
-    block.indent(1);
+    const block = new Block(this._frameId, 2, { value: `cy.viewport(${width}, ${height})` })
     return block
   }
 
   _handleWaitForNavigation () {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 2)
     if (this._options.waitForNavigation) {
       block.addLine({value: `await navigationPromise`})
     }
