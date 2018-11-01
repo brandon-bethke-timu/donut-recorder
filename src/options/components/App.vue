@@ -79,7 +79,6 @@
       },
       save () {
         this.saving = true
-        console.log(JSON.stringify(this.options))
         this.$chrome.storage.local.set({options: this.options }, () => {
           setTimeout(() => {
             this.saving = false

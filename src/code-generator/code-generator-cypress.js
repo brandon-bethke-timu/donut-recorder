@@ -1,6 +1,7 @@
 import messageActions from './message-actions'
 import Block from './block'
 import {global} from './global-settings'
+//import {details as eventToString} from 'key-event-to-string'
 
 const newLine = '\n';
 
@@ -20,13 +21,10 @@ export class CodeGeneratorCypress {
   }
 
   generate (events) {
-    return this.addImports() + newLine
-           + this.addGlobalVariables() + newLine
-           + this.addGlobalMethods() + newLine
-           + descHeader + newLine
+    return descHeader
            + itemHeader
            + this.addSetup()
-           + this._parseEvents(events)
+           + this.parseEvents(events)
            + itemFooter
            + descFooter
   }
@@ -46,7 +44,7 @@ export class CodeGeneratorCypress {
       }
     }
     this._blocks = [];
-    return result
+    return result + newLine
   }
 
   addGlobalVariables(){
@@ -64,7 +62,7 @@ export class CodeGeneratorCypress {
       }
     }
     this._blocks = [];
-    return result
+    return result + newLine
   }
 
   addGlobalMethods(){
@@ -84,7 +82,7 @@ export class CodeGeneratorCypress {
       }
     }
     this._blocks = [];
-    return result
+    return result + newLine
 
   }
 
@@ -112,7 +110,7 @@ export class CodeGeneratorCypress {
     this._blocks.push(block)
   }
 
-  _parseEvents (events) {
+  parseEvents (events) {
     let result = ''
     for (let i = 0; i < events.length; i++) {
       const { key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
@@ -151,6 +149,8 @@ export class CodeGeneratorCypress {
           if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
           } else if (keyCode == 13) {
             this._blocks.push(this._handleKeyPress(target.selector, '{enter}'))
+          } else {
+            this._blocks.push(this._handleKeyPress(target.selector, key))
           }
           break
 

@@ -43,7 +43,7 @@ export class CodeGeneratorPuppeteer {
     }
 
     script = script + this.addSetup()
-    + this._parseEvents(events)
+    + this.parseEvents(events)
 
     let block = new Block(this._frameId, indentLevel);
     block.addLine({value: `browser.close()\n`})
@@ -151,7 +151,7 @@ export class CodeGeneratorPuppeteer {
     this._blocks.push(block)
   }
 
-  _parseEvents (events) {
+  parseEvents (events) {
     let result = ''
 
     for (let i = 0; i < events.length; i++) {

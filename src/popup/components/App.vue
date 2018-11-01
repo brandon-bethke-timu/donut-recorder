@@ -126,7 +126,10 @@
       },
       stop () {
         this.bus.postMessage({ action: 'stop' })
+        this.refresh()
 
+      },
+      refresh () {
         this.$chrome.storage.local.get(['recording', 'options'], ({ recording, options }) => {
           this.recording = recording ? recording : []
 
@@ -162,7 +165,6 @@
         }
       },
       loadState (cb) {
-
         this.$chrome.storage.local.get(['controls', 'code', 'options'], ({ controls, code, options }) => {
           if (controls) {
             this.isRecording = controls.isRecording
@@ -170,7 +172,7 @@
           }
 
           if (code) {
-            this.code = code
+            this.refresh()
           }
 
           // Initialize the options in local storage if necessary
