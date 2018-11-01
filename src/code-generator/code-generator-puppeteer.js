@@ -49,7 +49,7 @@ export class CodeGeneratorPuppeteer {
     block.addLine({value: `browser.close()\n`})
     const lines = block.getLines()
     for (let line of lines) {
-      script += script + line.value + newLine
+      script = script + line.value + newLine
     }
 
     if(this._options.mocha){
