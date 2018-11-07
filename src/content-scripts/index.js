@@ -7,6 +7,9 @@ class EventRecorder {
   }
 
   start () {
+    chrome.storage.local.get(['options'], ({ options }) => {
+      this.dataAttribute = options && options.global ? options.global.dataAttribute : undefined
+    });
     const events = Object.values(eventsToRecord)
     if (!window.eventRecorderInitialized) {
       const boundedRecordEvent = this.recordEvent.bind(this)
@@ -33,6 +36,10 @@ class EventRecorder {
     if (this.previousEvent && this.previousEvent.timeStamp === e.timeStamp) return
     this.previousEvent = e
 
+    const selector = e.target.hasAttribute && e.target.hasAttribute(this.dataAttribute)
+      ? formatDataSelector(e.target, this.dataAttribute)
+      : finder(e.target, { seedMinLength: 5, optimizedMinLength: 10 })
+
     let value = e.target.value;
     if(e.target.getAttribute && e.target.getAttribute('contenteditable')){
       value = e.target.textContent;
@@ -48,7 +55,7 @@ class EventRecorder {
       keyCode: e.keyCode ? e.keyCode : undefined,
       target: {
         tagName: e.target.tagName ? e.target.tagName : undefined,
-        selector: finder(e.target, { seedMinLength: 5, optimizedMinLength: 10 }),
+        selector: selector,
         href: e.target.href ? e.target.href : undefined,
         innerText: e.target.innerText ? e.target.innerText.normalize() : undefined,
         id: e.target.id ? e.target.id : undefined
@@ -58,6 +65,10 @@ class EventRecorder {
     }
     this.sendMessage(msg)
   }
+}
+
+function formatDataSelector (element, attribute) {
+  return `[${attribute}=${element.getAttribute(attribute)}]`
 }
 
 window.eventRecorder = new EventRecorder()

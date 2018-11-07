@@ -241,8 +241,7 @@ export class CodeGeneratorCypress {
   }
 
   _handleSetLocalStorage() {
-    const block = new Block(this._frameId)
-    block.indent(2);
+    const block = new Block(this._frameId, 2)
     let script = ""
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
@@ -283,8 +282,7 @@ export class CodeGeneratorCypress {
   }
 
   _handleKeyDown (selector, value) {
-    const block = new Block(this._frameId)
-    block.indent(1);
+    const block = new Block(this._frameId, 1)
     block.addLine({ value: `cy.get('${selector}').type('${value}', {delay: 50})` })
     return block
   }

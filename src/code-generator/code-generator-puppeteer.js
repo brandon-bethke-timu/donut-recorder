@@ -127,7 +127,7 @@ export class CodeGeneratorPuppeteer {
   addSetup(){
     let result = ''
     let block = new Block(this._frameId, indentLevel);
-    block.addLine({value: `browser = await puppeteer.launch( {headless: false} );`})
+    block.addLine({value: `browser = await puppeteer.launch( {headless: ${this._options.headless}} );`})
     block.addLine({value: `page = await browser.newPage();`})
 
     var cookies = JSON.parse(this._options.cookies)

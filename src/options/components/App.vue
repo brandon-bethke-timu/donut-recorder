@@ -30,16 +30,16 @@
             </div>
             <h4 class="settings-block-title">Common Options</h4>
             <div class="settings-group">
-              <label>
-                <input id="settings-wait" type="textbox" v-model="options.global.wait" @change="save">
-                the wait period for arbitrary wait commands</code>
-              </label>
+              <label>When present on the element, use this attribute when generating the selector </label>
+              <input class="settings-text" id="settings-dataAttribute" type="textbox" v-model="options.global.dataAttribute" @change="save">
             </div>
             <div class="settings-group">
-              <label>
-                <input id="settings-typingTerminator" type="textbox" v-model="options.global.typingTerminator" @change="save">
-                the keycode that indicates that the user is done typing and emit the <code>type()</code> instruction
-              </label>
+              <label>the wait period for arbitrary wait commands</code></label>
+              <input class="settings-text" id="settings-wait" type="textbox" v-model="options.global.wait" @change="save">
+            </div>
+            <div class="settings-group">
+              <label>the keycode that indicates that the user is done typing and emit the <code>type()</code> instruction</label>
+              <input class="settings-text" id="settings-typingTerminator" type="textbox" v-model="options.global.typingTerminator" @change="save">
             </div>
             <div class="settings-group">
               <label for="settings-cookies" >A json value that defines the cookies.</label>
@@ -64,7 +64,6 @@
     name: 'App',
     data () {
       return {
-        myoptions: [],
         loading: true,
         saving: false,
         options: {global, generators}

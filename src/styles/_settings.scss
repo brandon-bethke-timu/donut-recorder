@@ -1,4 +1,21 @@
 .settings-textarea {
-    width: 500px;
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid $gray-light;
+    padding-left: 15px;
     height: 150px;
+    font-size: 14px;
+    border-radius: 10px;
+    -webkit-box-sizing: border-box;
+}
+
+.settings-text {
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid $gray-light;
+    padding-left: 15px;
+    height: 38px;
+    font-size: 14px;
+    border-radius: 10px;
+    -webkit-box-sizing: border-box;
 }
