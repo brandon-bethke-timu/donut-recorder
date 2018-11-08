@@ -160,7 +160,7 @@
         this.$chrome.storage.local.get(['controls', 'code', 'options'], ({ controls, code, options }) => {
           if (controls) {
             this.isRecording = controls.isRecording
-            this.isPaused = controls._isPaused
+            this.isPaused = controls.isPaused
           }
 
           if (code) {
