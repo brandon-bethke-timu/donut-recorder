@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.6.1 (26313) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-calendar-hangout</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path id="path-1" d="M2,0 L22,0 C23.10457,0 24,0.89543 24,2 L24,22 C24,23.104569 23.10457,24 22,24 L2,24 C0.895431,24 0,23.104569 0,22 L0,2 C0,0.89543 0.895431,0 2,0 L2,0 Z"></path>
+        <path id="path-3" d="M10,0 C10,0.4375 9.91071,0.29375 10,0 C9.73772,0.2125 9.6875,0.2 10,0 C9.54799,0.2 9.45871,0.2375 10,0 L7.14286,3.2 L7.14286,1.6 C7.14286,0.80625 6.42299,0 5.71429,0 L1.428571,0 C0.719866,0 0,0.80625 0,1.6 L0,6.4 C0,7.19375 0.719866,8 1.428571,8 L5.71429,8 C6.42299,8 7.14286,7.19375 7.14286,6.4 L7.14286,4.8 L10,8 C9.45871,7.7625 9.54799,7.8 10,8 C9.6875,7.8 9.73772,7.7875 10,8 C9.91071,7.70625 10,7.5625 10,8 L10,0 L10,0 Z"></path>
+    </defs>
+    <g id="Icons--All" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Medium-32-X-32">
+            <g id="icon-calendar-hangout">
+                <g id="Group-3" transform="translate(4.000000, 4.000000)">
+                    <mask id="mask-2" fill="white">
+                        <use xlink:href="#path-1"></use>
+                    </mask>
+                    <g id="Clip-2"></g>
+                    <path d="M-5,29 L29,29 L29,-5 L-5,-5 L-5,29 Z" id="Fill-1" fill="#D85042" mask="url(#mask-2)"></path>
+                </g>
+                <path d="M6,4 L26,4 L26,4 C27.10457,4 28,4.8954305 28,6 L28,26 L28,26 C28,27.10457 27.10457,28 26,28 L6,28 L6,28 C4.8954305,28 4,27.10457 4,26 L4,6 L4,6 C4,4.8954305 4.8954305,4 6,4 L6,4 Z" id="Stroke-4" stroke="#D85042" stroke-width="0.8"></path>
+                <g id="Group-7" transform="translate(11.000000, 13.000000)">
+                    <mask id="mask-4" fill="white">
+                        <use xlink:href="#path-3"></use>
+                    </mask>
+                    <g id="Clip-6"></g>
+                    <path d="M-5,13 L15,13 L15,-5 L-5,-5 L-5,13 Z" id="Fill-5" fill="#FFFFFF" mask="url(#mask-4)"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

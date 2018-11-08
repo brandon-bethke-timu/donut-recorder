@@ -1,9 +1,15 @@
 <template>
   <div id="donut-recorder" class="recorder">
     <div class="header">
-      <a href="#" @click="goHome">
-        Recorder <span class="text-muted"><small>{{version}}</small></span>
-      </a>
+      <a href="#" @click="goHome">Recorder <span class="text-muted"><small>{{version}}</small></span></a>
+      <div class="recording-buttons">
+        <img src="/images/recording-start.svg" v-show="!showResultsTab && !isRecording" @click="toggleRecord" v-b-tooltip.hover title="Start Recording" alt="Start Recording">
+        <img src="/images/recording-stop.svg" v-show="isRecording" @click="toggleRecord" v-b-tooltip.hover title="Stop Recording" alt="Stop Recording" >
+        <img class='pause-buttons' src="/images/recording-pause.svg" v-show="isRecording && !isPaused" @click="togglePause" v-b-tooltip.hover title="Pause Recording" alt="Pause Recording">
+        <img class='pause-buttons' src="/images/recording-resume.svg" v-show="isRecording && isPaused" @click="togglePause" v-b-tooltip.hover title="Resume Recording" alt="Resume Recording">
+        <img src="/images/recording-restart.svg" v-show="showResultsTab && code" @click="restart" v-b-tooltip.hover title="Restart Recording" alt="Restart Recording">
+        <img src="/images/recording-copy.svg" v-clipboard:copy='code' v-show="showResultsTab && code" @click="setCopying" v-b-tooltip.hover title="Copy Recording" alt="Copy Recording">
+      </div>
       <div class="left">
         <div class="recording-badge" v-show="isRecording">
           <span class="red-dot"></span>
@@ -20,15 +26,6 @@
     <div class="main">
       <div class="tabs" v-show="!showHelp">
         <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResultsTab"/>
-        <div class="recording-footer" v-show="!showResultsTab">
-          <button class="btn btn-sm" @click="toggleRecord" :class="isRecording ? 'btn-danger' : 'btn-primary'">
-            {{recordButtonText}}
-          </button>
-          <button class="btn btn-sm btn-primary btn-outline-primary" @click="togglePause" v-show="isRecording">
-            {{pauseButtonText}}
-          </button>
-          <a href="#" @click="showResultsTab = true" v-show="code">view code</a>
-        </div>
         <div class="recording-footer" v-show="isRecording">
           <button class="btn btn-sm btn-primary" @click="wait" v-show="isRecording">
             {{waitButtonText}}
@@ -40,11 +37,7 @@
             {{textClickButtonText}}
           </button>
         </div>
-        <ResultsTab :code="code" :copy-link-text="copyLinkText" :restart="restart" :set-copying="setCopying" v-show="showResultsTab"/>
-        <div class="results-footer" v-show="showResultsTab">
-          <button class="btn btn-sm btn-primary" @click="restart" v-show="code">Restart</button>
-          <a href="#" v-clipboard:copy='code' @click="setCopying" v-show="code">{{copyLinkText}}</a>
-        </div>
+        <ResultsTab :code="code" :restart="restart" v-show="showResultsTab"/>
       </div>
       <HelpTab v-show="showHelp"></HelpTab>
     </div>
@@ -241,6 +234,15 @@
 
       a {
         color: $gray-dark;
+      }
+
+      .recording-buttons {
+        margin-left: 15px;
+      }
+
+      .pause-buttons {
+        -webkit-transform: rotate(90deg);
+        padding-left: 2px
       }
 
       .left {

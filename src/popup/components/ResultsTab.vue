@@ -4,7 +4,7 @@
       <div class="generated-code">
         <pre v-highlightjs="code" v-if="code"><code class="javascript"></code></pre>
         <pre v-else>
-        <code>No code yet...</code>
+        <code>No code...</code>
       </pre>
       </div>
     </div>

@@ -3,7 +3,7 @@
     <div class="content">
       <div class="empty" v-show="!isRecording">
         <img src="/images/Desert.svg" alt="desert" width="78px">
-        <h3>No recorded events yet</h3>
+        <h3>No recorded events</h3>
         <p class="text-muted">Click record to begin</p>
       </div>
       <div class="events" v-show="isRecording">
