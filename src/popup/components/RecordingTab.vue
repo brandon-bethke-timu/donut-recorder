@@ -9,13 +9,20 @@
       <div class="events" v-show="isRecording">
         <p class="text-muted text-center loading" v-show="liveEvents.length === 0">Waiting for events</p>
         <ul class="event-list">
-          <li v-for="(event, index) in liveEvents" :key="index" class="event-list-item">
+          <li v-for="(event, index) in liveEvents"
+          :key="index"
+          class="event-list-item"
+          :class="getActiveClass(event, index)"
+          @mouseover="setActiveItem(event, index)">
             <div class="event-label">
               {{index + 1}}.
             </div>
             <div class="event-description">
               <div class="event-action">{{event.action}}</div>
               <div class="event-props text-muted">{{parseEventValue(event)}}</div>
+            </div>
+            <div v-if="activeIndex === index">
+              <img src="/images/icon-remove.svg" v-b-tooltip.hover title="Remove Event" @click="removeItem(event, index)">
             </div>
           </li>
         </ul>
@@ -28,9 +35,25 @@
     name: 'RecordingTab',
     props: {
       isRecording: { type: Boolean, default: false },
-      liveEvents: { type: Array, default: () => { return [] } }
+      liveEvents: { type: Array, default: () => [] },
+      activeIndex: undefined
+    },
+    mounted () {
+      this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
     },
     methods: {
+      getActiveClass(event, index) {
+        if(this.activeIndex == index){
+          return "active-item"
+        }
+      },
+      setActiveItem(event, index) {
+        this.activeIndex = index;
+      },
+      removeItem(event, index){
+        this.liveEvents.splice(index, 1)
+        this.bus.postMessage({ action: 'remove-event', data: {index} })
+      },
       parseEventValue (event) {
         if (event.action === 'viewport*') return `width: ${event.value.width}, height: ${event.value.height}`
         if (event.action === 'goto*') return event.value
@@ -50,6 +73,9 @@
   @import "~styles/_animations.scss";
   @import "~styles/_variables.scss";
 
+  li.active-item {
+    background-color: $blue-light;
+  }
 
   .recording-tab {
     .content {

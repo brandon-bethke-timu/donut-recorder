@@ -19,7 +19,7 @@
     </div>
     <div class="main">
       <div class="tabs" v-show="!showHelp">
-        <RecordingTab :code="code" :is-recording="isRecording" :live-events="liveEvents" v-show="!showResultsTab"/>
+        <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResultsTab"/>
         <div class="recording-footer" v-show="!showResultsTab">
           <button class="btn btn-sm" @click="toggleRecord" :class="isRecording ? 'btn-danger' : 'btn-primary'">
             {{recordButtonText}}
@@ -67,7 +67,6 @@
         code: '',
         showResultsTab: false,
         showHelp: false,
-        liveEvents: [],
         recording: [],
         isRecording: false,
         isPaused: false,
@@ -80,8 +79,8 @@
     mounted () {
       this.loadState(() => {
         if (this.isRecording) {
-          this.$chrome.storage.local.get(['recording', 'code'], ({ recording }) => {
-            this.liveEvents = recording
+          this.$chrome.storage.local.get(['recording'], ({ recording }) => {
+            this.recording = recording
           })
         }
 
@@ -154,7 +153,7 @@
         this.bus.postMessage({ action: 'cleanUp' })
       },
       cleanUp () {
-        this.recording = this.liveEvents = []
+        this.recording.length = 0
         this.code = ''
         this.showResultsTab = this.isRecording = this.isPaused = false
         this.storeState()

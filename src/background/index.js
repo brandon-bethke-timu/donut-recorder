@@ -21,7 +21,28 @@ class RecordingController {
         if (msg.action === 'wait') this.wait()
         if (msg.action === 'wait-for') this.waitFor()
         if (msg.action === 'click-text') this.clickText()
+        if (msg.action === 'remove-event') this.removeEvent(msg)
+        if (msg.action === 'edit-event') this.editEvent(msg)
       })
+    })
+  }
+
+  removeEvent(msg) {
+    if(this._recording.length <= msg.data.index) {
+      return;
+    }
+    this._recording.splice(msg.data.index, 1)
+
+    chrome.storage.local.set({ recording: this._recording }, () => {
+    })
+  }
+
+  editEvent(msg){
+    if(this._recording.length <= msg.data.index){
+      return;
+    }
+    this._recording[msg.data.index] = msg.data.event;
+    chrome.storage.local.set({ recording: this._recording }, () => {
     })
   }
 
@@ -107,7 +128,6 @@ class RecordingController {
   }
 
   handleMessage (msg, sender) {
-
     let skip = false;
     if (msg.control) return this.handleControlMessage(msg, sender)
     // to account for clicks etc. we need to record the frameId and url to later target the frame in playback
@@ -192,7 +212,6 @@ class RecordingController {
       this._recording.push(msg)
     }
     chrome.storage.local.set({ recording: this._recording }, () => {
-      console.debug('stored recording updated')
     })
   }
 
