@@ -64,6 +64,7 @@
         if (event.action === 'click-text*') return `text: ${event.target.innerText}`
         if (event.action === 'wait-for-text*') return `text: ${event.target.innerText}`
         if (event.action === 'type-text*') return `text: ${event.value}`
+        if (event.action === 'wait*') return `timeout: ${event.value}`
         return ''
       }
     }

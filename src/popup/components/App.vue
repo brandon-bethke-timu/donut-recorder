@@ -24,18 +24,12 @@
       </div>
     </div>
     <div class="main">
-      <div class="tabs" v-show="!showHelp">
+      <div v-show="!showHelp">
         <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResults"/>
         <div class="recording-footer" v-show="isRecording">
-          <button class="btn btn-sm btn-primary" @click="wait" v-show="isRecording">
-            {{waitButtonText}}
-          </button>
-          <button class="btn btn-sm btn-primary" @click="waitFor" v-show="isRecording">
-            {{waitForButtonText}}
-          </button>
-          <button class="btn btn-sm btn-primary" @click="textClick" v-show="isRecording">
-            {{textClickButtonText}}
-          </button>
+          <img src="/images/icon-wait.svg" @click="wait" v-b-tooltip.hover title="Wait" alt="Add Wait">
+          <img src="/images/icon-wait-for.svg" @click="waitFor" v-b-tooltip.hover title="Wait For" alt="Add Wait For">
+          <img src="/images/icon-text-click.svg" @click="textClick" v-b-tooltip.hover title="Text Click" alt="Add Text Click">
         </div>
         <ResultsTab :code="code" :restart="restart" v-show="showResults"/>
       </div>
@@ -103,7 +97,7 @@
         this.storeState()
       },
       wait () {
-        this.bus.postMessage({ action: 'wait' })
+        this.bus.postMessage({ action: 'wait', value: this.options.global.wait })
       },
       waitFor () {
         this.bus.postMessage({ action: 'wait-for' })

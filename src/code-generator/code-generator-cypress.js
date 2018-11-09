@@ -187,7 +187,7 @@ export class CodeGeneratorCypress {
           break
 
         case 'wait*':
-          this._blocks.push(this._handleAddWait(this._options.wait))
+          this._blocks.push(this._handleAddWait(value))
           break
 
         case 'set-local-storage*':

@@ -18,7 +18,7 @@ class RecordingController {
         if (msg.action === 'cleanUp') this.cleanUp()
         if (msg.action === 'pause') this.pause()
         if (msg.action === 'unpause') this.unPause()
-        if (msg.action === 'wait') this.wait()
+        if (msg.action === 'wait') this.wait(msg)
         if (msg.action === 'wait-for') this.waitFor()
         if (msg.action === 'click-text') this.clickText()
         if (msg.action === 'remove-event') this.removeEvent(msg)
@@ -44,8 +44,8 @@ class RecordingController {
     chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
   }
 
-  wait(){
-    this.handleMessage({ action: messageActions.WAIT });
+  wait(msg){
+    this.handleMessage({ action: messageActions.WAIT,  value: msg.value });
   }
 
   waitFor() {
