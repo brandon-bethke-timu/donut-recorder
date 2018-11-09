@@ -28,7 +28,7 @@ class EventRecorder {
     try {
       chrome.runtime.sendMessage(msg)
     } catch (err) {
-      console.debug('caught error', err)
+      console.log('caught error', err)
     }
   }
 

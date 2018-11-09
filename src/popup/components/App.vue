@@ -3,12 +3,12 @@
     <div class="header">
       <a href="#" @click="goHome">Recorder <span class="text-muted"><small>{{version}}</small></span></a>
       <div class="recording-buttons">
-        <img src="/images/recording-start.svg" v-show="!showResultsTab && !isRecording" @click="toggleRecord" v-b-tooltip.hover title="Start Recording" alt="Start Recording">
+        <img src="/images/recording-start.svg" v-show="!showResults && !isRecording" @click="toggleRecord" v-b-tooltip.hover title="Start Recording" alt="Start Recording">
         <img src="/images/recording-stop.svg" v-show="isRecording" @click="toggleRecord" v-b-tooltip.hover title="Stop Recording" alt="Stop Recording" >
         <img class='pause-buttons' src="/images/recording-pause.svg" v-show="isRecording && !isPaused" @click="togglePause" v-b-tooltip.hover title="Pause Recording" alt="Pause Recording">
         <img class='pause-buttons' src="/images/recording-resume.svg" v-show="isRecording && isPaused" @click="togglePause" v-b-tooltip.hover title="Resume Recording" alt="Resume Recording">
-        <img src="/images/recording-restart.svg" v-show="showResultsTab && code" @click="restart" v-b-tooltip.hover title="Restart Recording" alt="Restart Recording">
-        <img src="/images/recording-copy.svg" v-clipboard:copy='code' v-show="showResultsTab && code" @click="setCopying" v-b-tooltip.hover title="Copy Recording" alt="Copy Recording">
+        <img src="/images/recording-restart.svg" v-show="showResults && code" @click="restart" v-b-tooltip.hover title="Restart Recording" alt="Restart Recording">
+        <img src="/images/recording-copy.svg" v-clipboard:copy='code' v-show="showResults && code" @click="setCopying" v-b-tooltip.hover title="Copy Recording" alt="Copy Recording">
       </div>
       <div class="left">
         <div class="recording-badge" v-show="isRecording">
@@ -25,7 +25,7 @@
     </div>
     <div class="main">
       <div class="tabs" v-show="!showHelp">
-        <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResultsTab"/>
+        <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResults"/>
         <div class="recording-footer" v-show="isRecording">
           <button class="btn btn-sm btn-primary" @click="wait" v-show="isRecording">
             {{waitButtonText}}
@@ -37,7 +37,7 @@
             {{textClickButtonText}}
           </button>
         </div>
-        <ResultsTab :code="code" :restart="restart" v-show="showResultsTab"/>
+        <ResultsTab :code="code" :restart="restart" v-show="showResults"/>
       </div>
       <HelpTab v-show="showHelp"></HelpTab>
     </div>
@@ -58,7 +58,7 @@
     data () {
       return {
         code: '',
-        showResultsTab: false,
+        showResults: false,
         showHelp: false,
         recording: [],
         isRecording: false,
@@ -70,18 +70,17 @@
       }
     },
     mounted () {
-      this.loadState(() => {
-        if (this.isRecording) {
-          this.$chrome.storage.local.get(['recording'], ({ recording }) => {
-            this.recording = recording
-          })
-        }
-
-        if (!this.isRecording && this.code) {
-          this.showResultsTab = true
+      chrome.runtime.onMessage.addListener((request)=>{
+        if(request.control === 'update-recording'){
+          this.recording = request.recording;
+          if(!this.isRecording && !this.isPaused && this.showResults) {
+            this.refresh()
+          }
         }
       })
+      this.loadState()
       this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
+      this.bus.postMessage({action: 'get-recording'})
     },
     methods: {
       toggleRecord () {
@@ -122,22 +121,19 @@
 
       },
       refresh () {
-        this.$chrome.storage.local.get(['recording', 'options'], ({ recording, options }) => {
-          this.recording = recording ? recording : []
-
+        this.$chrome.storage.local.get(['options'], ({ options }) => {
           let activeOptions = {}
           let temp = options.generators.types.find((element) => element.id === options.generators.active).options
           for(let option in temp){
             let item = temp[option];
             activeOptions[item.name] = item.value
           }
-
           let generatorOptions = Object.assign(options.global, activeOptions)
           chrome.extension.getBackgroundPage().console.log("Using Code Generator", options.generators.active)
           chrome.extension.getBackgroundPage().console.log("With Options", JSON.stringify(generatorOptions))
           let codeGen = new CodeGenerator(options.generators.active, generatorOptions);
           this.code = codeGen.generate(this.recording)
-          this.showResultsTab = true
+          this.showResults = true
           this.storeState()
         })
       },
@@ -148,7 +144,7 @@
       cleanUp () {
         this.recording.length = 0
         this.code = ''
-        this.showResultsTab = this.isRecording = this.isPaused = false
+        this.showResults = this.isRecording = this.isPaused = false
         this.storeState()
       },
       openOptions () {
@@ -157,29 +153,25 @@
         }
       },
       loadState (cb) {
-        this.$chrome.storage.local.get(['controls', 'code', 'options'], ({ controls, code, options }) => {
+        chrome.storage.local.get(['controls', 'options'], ({ controls, options }) => {
           if (controls) {
             this.isRecording = controls.isRecording
             this.isPaused = controls.isPaused
+            this.showResults = controls.showResults
           }
-
-          if (code) {
-            this.refresh()
-          }
-
           // Initialize the options in local storage if necessary
           if(!options){
-            this.$chrome.storage.local.set({options: this.options})
+            chrome.storage.local.set({options: this.options})
           }
-          cb()
+          if(cb) cb()
         })
       },
       storeState () {
         this.$chrome.storage.local.set({
-          code: this.code,
           controls: {
             isRecording: this.isRecording,
-            isPaused: this.isPaused
+            isPaused: this.isPaused,
+            showResults: this.showResults
           }
         })
       },
@@ -188,7 +180,7 @@
         setTimeout(() => { this.isCopying = false }, 1500)
       },
       goHome () {
-        this.showResultsTab = false
+        this.showResults = false
         this.showHelp = false
       },
       toggleShowHelp () {
