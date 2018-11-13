@@ -6,7 +6,7 @@
         <h3>No recorded events</h3>
         <p class="text-muted">Click record to begin</p>
       </div>
-      <div class="events" v-show="isRecording">
+      <div id="events" class="events" v-show="isRecording">
         <p class="text-muted text-center loading" v-show="liveEvents.length === 0">Waiting for events</p>
         <ul class="event-list">
           <li v-for="(event, index) in liveEvents"
@@ -72,8 +72,13 @@
       this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
     },
     methods: {
+      scrollToEnd: function() {
+        var container = this.$el.querySelector("#events");
+        container.scrollTop = container.scrollHeight;
+      },
       variable () {
         this.sendMessage({ id: uuid(), action: 'variable*', name: "myvariable",  value: "myvalue", type: "string" })
+        this.scrollToEnd();
       },
       wait () {
         this.sendMessage({ id: uuid(), action: 'wait*', value: this.options.global.wait })
