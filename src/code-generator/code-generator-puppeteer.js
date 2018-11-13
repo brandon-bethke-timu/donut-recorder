@@ -155,7 +155,7 @@ export class CodeGeneratorPuppeteer {
     let result = ''
 
     for (let i = 0; i < events.length; i++) {
-      const { value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
+      const { name, type, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
       // we need to keep a handle on what frames events originate from
       this._setFrames(frameId, frameUrl)
 
@@ -242,6 +242,10 @@ export class CodeGeneratorPuppeteer {
         case 'set-local-storage*':
           this._blocks.push(this._handleSetLocalStorage())
           break
+
+        case 'variable*':
+          this._blocks.push(this.handleVariable(name, value, type))
+          break
       }
     }
 
@@ -279,6 +283,16 @@ export class CodeGeneratorPuppeteer {
       this._postProcessSetFrames()
     }
 
+  }
+
+  handleVariable(name, value, type){
+    const block = new Block(this._frameId, indentLevel)
+    if(type === "string"){
+      block.addLine({value: `let ${name} = "${value}"`})
+    } else {
+      block.addLine({value: `let ${name} = ${value}`})
+    }
+    return block;
   }
 
   _handleSetLocalStorage() {

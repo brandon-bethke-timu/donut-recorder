@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.6.1 (26313) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-editor-move-down</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="small-icons">
+            <g id="Editor---Wiki">
+                <g id="icon-editor-move-down">
+                    <g id="Group-2" transform="translate(2.775194, 4.560413)">
+                        <path d="M8.93530904,2.37495587 L1.41905891,2.37495587 C1.12545539,2.37495587 0.8821839,2.61791305 0.8821839,2.91113724 C0.8821839,3.05356042 0.940904604,3.18760576 1.04156867,3.28813977 L4.79969373,7.04140938 C4.9003578,7.14194338 5.03457655,7.20058822 5.17718398,7.20058822 C5.3197914,7.20058822 5.45401015,7.14194338 5.55467422,7.04140938 L9.31279928,3.28813977 C9.41346335,3.18760576 9.47218405,3.05356042 9.47218405,2.91113724 C9.47218405,2.61791305 9.22891256,2.37495587 8.93530904,2.37495587 Z" id="icon-menu" fill="#3E4151"></path>
+                        <path d="M5.26457953,5.59533855 L5.26457953,0.331157891" id="Line" stroke="#3E4151" stroke-width="2" stroke-linecap="round"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

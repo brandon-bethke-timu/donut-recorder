@@ -18,6 +18,7 @@ export class CodeGeneratorCypress {
     this._frameId = 0
     this._allFrames = {}
     this._navigationPromiseSet = false
+    this.variables = []
   }
 
   generate (events) {
@@ -113,7 +114,7 @@ export class CodeGeneratorCypress {
   parseEvents (events) {
     let result = ''
     for (let i = 0; i < events.length; i++) {
-      const { key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
+      const { name, type, key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
       // we need to keep a handle on what frames events originate from
       this._setFrames(frameId, frameUrl)
 
@@ -163,7 +164,7 @@ export class CodeGeneratorCypress {
           break;
 
         case 'type-text*':
-          this._blocks.push(this._handleKeyDown(target.selector, value, keyCode))
+          this._blocks.push(this._handleKeyDown(target.selector, value))
           break;
 
         case 'mousedown':
@@ -201,6 +202,10 @@ export class CodeGeneratorCypress {
         case 'viewport*':
           //this._blocks.push((this._handleViewport(value.width, value.height)))
           break
+
+        case 'variable*':
+          this._blocks.push(this.handleVariable(name, value, type))
+          break;
       }
     }
 
@@ -214,6 +219,24 @@ export class CodeGeneratorCypress {
     }
 
     return result
+  }
+
+  isVariable(expression){
+    let pattern = new RegExp("\{\{([A-Za-z0-9]*)\}\}");
+    let groups = pattern.exec(expression);
+    if(groups && groups.length == 2){
+      return groups[1]
+    }
+    return undefined
+  }
+
+  format(expression){
+    let isVariable = this.isVariable(expression);
+    if(isVariable){
+      return isVariable
+    } else {
+      return `'${expression}'`;
+    }
   }
 
   _setFrames (frameId, frameUrl) {
@@ -240,6 +263,16 @@ export class CodeGeneratorCypress {
 
   }
 
+  handleVariable(name, value, type){
+    const block = new Block(this._frameId, 2)
+    if(type === "string"){
+      block.addLine({value: `let ${name} = "${value}"`})
+    } else {
+      block.addLine({value: `let ${name} = ${value}`})
+    }
+    return block;
+  }
+
   _handleSetLocalStorage() {
     const block = new Block(this._frameId, 2)
     let script = ""
@@ -260,30 +293,33 @@ export class CodeGeneratorCypress {
   }
 
   _handleClickText(id, tagName, innerText) {
+    innerText = this.format(innerText)
     const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').click({force: true})`})
     } else {
-      block.addLine({ value: `cy.get('${tagName}:contains("${innerText}")').click({force: true})`})
+      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click({force: true})`})
     }
     return block
   }
 
   _handleWaitFor(id, selector, tagName, innerText) {
+    innerText = this.format(innerText)
     const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').should('be.visible')`})
     } else if(selector) {
       block.addLine({ value: `cy.get('${selector}').should('be.visible')` })
     } else {
-      block.addLine({ value: `cy.get('${tagName}:contains("${innerText}")').should('be.visible')`})
+      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
     }
     return block
   }
 
   _handleKeyDown (selector, value) {
-    const block = new Block(this._frameId, 1)
-    block.addLine({ value: `cy.get('${selector}').type('${value}', {delay: 50})` })
+    value = this.format(value);
+    const block = new Block(this._frameId, 2)
+    block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: 50})` })
     return block
   }
 

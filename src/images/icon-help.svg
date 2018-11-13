@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.6.1 (26313) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-feed-chat-global-solid</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Medium-32-X-32---Inbox-Feed" stroke-width="0.8" stroke="#3498DB" fill="#3498DB">
+            <g id="icon-feed-chat-global-solid">
+                <g transform="translate(7.000000, 7.000000)" id="Page-1">
+                    <path d="M16.1283162,13.013757 L17.1955515,17.1503571 L13.0600147,15.9869383 C12.9266103,16.1162071 12.7932059,16.1162071 12.6598015,16.2454758 C11.4591618,16.7625509 10.2585221,17.1503571 8.92447795,17.1503571 C4.25532352,17.1503571 0.519999981,13.530832 0.519999981,9.00642555 C0.519999981,4.48201912 4.25532352,0.86249397 8.92447795,0.86249397 C13.5936324,0.86249397 17.3289559,4.48201912 17.3289559,9.00642555 C17.3289559,10.2991131 17.0621471,11.5918007 16.395125,12.7552194 C16.2617206,12.7552194 16.2617206,12.8844882 16.1283162,13.013757 L16.1283162,13.013757 Z"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

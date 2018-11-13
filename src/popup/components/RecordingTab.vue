@@ -22,26 +22,68 @@
               <div class="event-props text-muted">{{parseEventValue(event)}}</div>
             </div>
             <div v-if="activeIndex === index">
+              <img src="/images/icon-edit.svg" v-b-tooltip.hover title="Edit Event" @click="editItem(event, index)">
+              <img src="/images/icon-move-up.svg" v-b-tooltip.hover title="Move Up" @click="moveItemUp(event, index)">
+              <img src="/images/icon-move-down.svg" v-b-tooltip.hover title="Move Down" @click="moveItemDown(event, index)">
               <img src="/images/icon-remove.svg" v-b-tooltip.hover title="Remove Event" @click="removeItem(event, index)">
             </div>
           </li>
         </ul>
       </div>
+      <div class="recording-footer" v-show="isRecording">
+        <img src="/images/icon-variable.svg" @click="variable" v-b-tooltip.hover title="Variable" alt="Add Variable">
+        <img src="/images/icon-wait.svg" @click="wait" v-b-tooltip.hover title="Wait" alt="Add Wait">
+        <img src="/images/icon-wait-for.svg" @click="waitFor" v-b-tooltip.hover title="Wait For" alt="Add Wait For">
+        <img src="/images/icon-text-click.svg" @click="textClick" v-b-tooltip.hover title="Text Click" alt="Add Text Click">
+      </div>
+      <EditEventTab :event="currentEvent" v-show="showDetails"/>
     </div>
   </div>
 </template>
 <script>
+
+  import { global } from '../../code-generator/global-settings'
+  import uuid from '../../background/uuid'
+  import EditEventTab from "./EditEventTab.vue";
+
   export default {
     name: 'RecordingTab',
+    components: { EditEventTab },
     props: {
       isRecording: { type: Boolean, default: false },
-      liveEvents: { type: Array, default: () => [] },
-      activeIndex: undefined
+      liveEvents: { type: Array, default: () => [] }
+    },
+    watch: {
+      isRecording: function(recording){
+        this.showDetails = recording && this.currentEvent && liveEvents.length > 0 ? true : false
+      }
+    },
+    data() {
+      return {
+        currentEvent: undefined,
+        options: { global },
+        activeIndex: undefined
+      }
     },
     mounted () {
+      chrome.storage.local.get(['options'], ({ options }) => {
+        this.options = options;
+      })
       this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
     },
     methods: {
+      variable () {
+        this.sendMessage({ id: uuid(), action: 'variable*', name: "myvariable",  value: "myvalue", type: "string" })
+      },
+      wait () {
+        this.sendMessage({ id: uuid(), action: 'wait*', value: this.options.global.wait })
+      },
+      waitFor () {
+        this.sendMessage({ id: uuid(), action: 'wait-for*' })
+      },
+      textClick() {
+        this.sendMessage({ id: uuid(), action: 'click-on*' })
+      },
       getActiveClass(event, index) {
         if(this.activeIndex == index){
           return "active-item"
@@ -50,21 +92,61 @@
       setActiveItem(event, index) {
         this.activeIndex = index;
       },
-      removeItem(event, index){
+      moveItemUp(event, index){
+        if(index === 0) {
+          return
+        }
         this.liveEvents.splice(index, 1)
-        this.bus.postMessage({ action: 'remove-event', data: {index} })
+        this.insertItem(event, index - 1)
+      },
+      moveItemDown(event, index){
+        if(index + 1 === this.liveEvents.length){
+          return
+        }
+        this.liveEvents.splice(index, 1)
+        this.insertItem(event, index + 1)
+      },
+      insertItem(event, index){
+        this.liveEvents.splice(index, 0, event)
+        this.sendMessage({ action: 'insert-event', event, index })
+      },
+      removeItem(event, index){
+        if(event === this.currentEvent){
+          this.currentEvent = undefined;
+          this.showDetails = false;
+        }
+        this.liveEvents.splice(index, 1)
+        this.sendMessage({ action: 'remove-event', event })
+      },
+      editItem(event, index){
+        this.currentEvent = event;
+        this.showDetails = true
+      },
+      sendMessage(msg){
+        try{
+          this.bus.postMessage(msg)
+        }catch(error){
+          chrome.extension.getBackgroundPage().console.log("There was an issue sending the message", error)
+        }
+      },
+      substring(value){
+        if(value.length > 80){
+          return value.substring(0,77) + "..."
+        }
+        return value
       },
       parseEventValue (event) {
         if (event.action === 'viewport*') return `width: ${event.value.width}, height: ${event.value.height}`
-        if (event.action === 'goto*') return event.value
+        if (event.action === 'goto*') return this.substring(event.value)
         if (event.action === 'navigation*') return ''
-        if (event.action === 'mousemove') return `x: ${event.clientX}, y: ${event.clientY}`
+        if (event.action === 'mousemove') return this.substring(`x: ${event.clientX}, y: ${event.clientY}`)
         if (event.action === 'keydown') return `key: ${event.key}`
-        if (event.action === 'mousedown') return `path: ${event.target.selector}`
-        if (event.action === 'click-text*') return `text: ${event.target.innerText}`
-        if (event.action === 'wait-for-text*') return `text: ${event.target.innerText}`
-        if (event.action === 'type-text*') return `text: ${event.value}`
+        if (event.action === 'mousedown') return this.substring(`path: ${event.target.selector}`)
+        if (event.action === 'click-text*') return this.substring(`text: ${event.target.innerText}`)
+        if (event.action === 'wait-for-text*') return this.substring(`text: ${event.target.innerText}`)
+        if (event.action === 'type-text*') return this.substring(`text: ${event.value}`)
         if (event.action === 'wait*') return `timeout: ${event.value}`
+        if (event.action === 'variable*') return this.substring(`name: ${event.name}, value: ${event.value}, type: ${event.type}`)
         return ''
       }
     }
@@ -73,9 +155,13 @@
 <style lang="scss" scoped>
   @import "~styles/_animations.scss";
   @import "~styles/_variables.scss";
+  @import "~styles/_mixins.scss";
+
+  .recording-footer {
+    @include footer()
+  }
 
   li.active-item {
-    background-color: $blue-light;
   }
 
   .recording-tab {

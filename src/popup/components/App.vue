@@ -16,21 +16,16 @@
           {{recordingBadgeText}}
         </div>
         <a href="#" @click="toggleShowHelp" class="header-button">
-          <img src="/images/help.svg" alt="help" width="18px">
+          <img src="/images/icon-help.svg" alt="help">
         </a>
         <a href="#" @click="openOptions" class="header-button">
-          <img src="/images/settings.svg" alt="settings" width="18px">
+          <img src="/images/icon-settings.svg" alt="settings">
         </a>
       </div>
     </div>
     <div class="main">
       <div v-show="!showHelp">
         <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResults"/>
-        <div class="recording-footer" v-show="isRecording">
-          <img src="/images/icon-wait.svg" @click="wait" v-b-tooltip.hover title="Wait" alt="Add Wait">
-          <img src="/images/icon-wait-for.svg" @click="waitFor" v-b-tooltip.hover title="Wait For" alt="Add Wait For">
-          <img src="/images/icon-text-click.svg" @click="textClick" v-b-tooltip.hover title="Text Click" alt="Add Text Click">
-        </div>
         <ResultsTab :code="code" :restart="restart" v-show="showResults"/>
       </div>
       <HelpTab v-show="showHelp"></HelpTab>
@@ -44,6 +39,7 @@
   import ResultsTab from "./ResultsTab.vue";
   import HelpTab from "./HelpTab.vue";
   import { global } from '../../code-generator/global-settings'
+  import uuid from '../../background/uuid'
   import { CodeGenerator, generators } from '../../code-generator/code-generator'
 
   export default {
@@ -58,7 +54,7 @@
         isRecording: false,
         isPaused: false,
         isCopying: false,
-        bus: null,
+        bus: undefined,
         version,
         options: { global, generators }
       }
@@ -96,15 +92,6 @@
         }
         this.storeState()
       },
-      wait () {
-        this.bus.postMessage({ action: 'wait', value: this.options.global.wait })
-      },
-      waitFor () {
-        this.bus.postMessage({ action: 'wait-for' })
-      },
-      textClick() {
-        this.bus.postMessage({ action: 'click-on' })
-      },
       start () {
         this.cleanUp()
         this.bus.postMessage({ action: 'start' })
@@ -113,6 +100,13 @@
         this.bus.postMessage({ action: 'stop' })
         this.refresh()
 
+      },
+      sendMessage(msg){
+        try{
+          this.bus.postMessage(msg)
+        }catch(error){
+          chrome.extension.getBackgroundPage().console.log("There was an issue sending the message", error)
+        }
       },
       refresh () {
         this.$chrome.storage.local.get(['options'], ({ options }) => {
@@ -188,15 +182,6 @@
       recordButtonText () {
         return this.isRecording ? 'Stop' : 'Record'
       },
-      waitForButtonText () {
-        return 'Wait For'
-      },
-      waitButtonText () {
-        return 'Wait'
-      },
-      textClickButtonText () {
-        return 'Text Click'
-      },
       pauseButtonText () {
         return this.isPaused ? 'Resume' : 'Pause'
       },
@@ -238,6 +223,7 @@
         align-items: center;
 
         .recording-badge {
+          margin-right: $spacer;
           color: $brand-danger;
           .red-dot {
             height: 9px;
@@ -252,19 +238,11 @@
         }
 
         .header-button {
-          margin-left: $spacer;
           img {
             vertical-align: middle;
           }
         }
       }
-    }
-
-    .recording-footer {
-      @include footer()
-    }
-    .results-footer {
-      @include footer()
     }
   }
 </style>

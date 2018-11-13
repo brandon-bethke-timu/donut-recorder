@@ -1,4 +1,5 @@
 import messageActions from '../code-generator/message-actions'
+import uuid from "./uuid"
 
 class RecordingController {
   constructor () {
@@ -18,42 +19,69 @@ class RecordingController {
         if (msg.action === 'cleanUp') this.cleanUp()
         if (msg.action === 'pause') this.pause()
         if (msg.action === 'unpause') this.unPause()
-        if (msg.action === 'wait') this.wait(msg)
-        if (msg.action === 'wait-for') this.waitFor()
-        if (msg.action === 'click-text') this.clickText()
+        if (msg.action === 'wait*') this.wait(msg)
+        if (msg.action === 'wait-for*') this.waitFor(msg)
+        if (msg.action === 'click-on*') this.clickText(msg)
+        if (msg.action === 'insert-event') this.insertEvent(msg)
         if (msg.action === 'remove-event') this.removeEvent(msg)
-        if (msg.action === 'edit-event') this.editEvent(msg)
+        if (msg.action === 'update-event') this.updateEvent(msg)
         if (msg.action === 'get-recording') chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
+        if (msg.action === 'variable*') this.variable(msg)
       })
     })
   }
 
-  removeEvent(msg) {
-    if(this._recording.length <= msg.data.index) {
-      return;
+  variable(msg) {
+    this.handleMessage(msg)
+  }
+
+  insertEvent(msg) {
+    var itemIndex = this._recording.findIndex( el => {
+      return el.id === msg.event.id && el.id
+    });
+
+    if(itemIndex === -1){
+      return
     }
-    this._recording.splice(msg.data.index, 1)
+    this._recording.splice(itemIndex, 1)
+    this._recording.splice(msg.index, 0, msg.event)
     chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
   }
 
-  editEvent(msg){
-    if(this._recording.length <= msg.data.index){
-      return;
+  removeEvent(msg) {
+    var itemIndex = this._recording.findIndex( el => {
+      return el.id === msg.event.id && el.id
+    });
+
+    if(itemIndex === -1){
+      return
     }
-    this._recording[msg.data.index] = msg.data.event;
+    this._recording.splice(itemIndex, 1)
+    chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
+  }
+
+  updateEvent(msg){
+    var itemIndex = this._recording.findIndex( el => {
+      return el.id === msg.event.id && el.id
+    });
+
+    if(itemIndex === -1){
+      return
+    }
+    this._recording[itemIndex] = msg.event;
     chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
   }
 
   wait(msg){
-    this.handleMessage({ action: messageActions.WAIT,  value: msg.value });
+    this.handleMessage(msg);
   }
 
-  waitFor() {
-    this.handleMessage({ action: messageActions.WAIT_FOR });
+  waitFor(msg) {
+    this.handleMessage(msg);
   }
 
-  clickText(){
-    this.handleMessage({ action: messageActions.CLICK_TEXT });
+  clickText(msg){
+    this.handleMessage(msg);
   }
 
   start () {
@@ -107,16 +135,16 @@ class RecordingController {
   }
 
   recordCurrentUrl (href) {
-    this.handleMessage({ action: messageActions.GOTO, value: href })
-    this.handleMessage({ action: messageActions.SET_LOCAL_STORAGE })
+    this.handleMessage({ id: uuid(), action: messageActions.GOTO, value: href })
+    this.handleMessage({ id: uuid(), action: messageActions.SET_LOCAL_STORAGE })
   }
 
   recordCurrentViewportSize (value) {
-    this.handleMessage({ value, action: messageActions.VIEWPORT })
+    this.handleMessage({ id: uuid(), value, action: messageActions.VIEWPORT })
   }
 
   recordNavigation () {
-    this.handleMessage({ action: messageActions.NAVIGATION })
+    this.handleMessage({ id: uuid(), action: messageActions.NAVIGATION })
   }
 
   handleMessage (msg, sender) {

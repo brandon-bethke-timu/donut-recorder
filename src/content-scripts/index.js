@@ -1,5 +1,6 @@
 import eventsToRecord from './dom-events-to-record'
 import finder from '@medv/finder'
+import uuid from '../background/uuid'
 
 class EventRecorder {
   constructor () {
@@ -44,8 +45,8 @@ class EventRecorder {
     if(e.target.getAttribute && e.target.getAttribute('contenteditable')){
       value = e.target.textContent;
     }
-
     const msg = {
+      id: uuid(),
       action: e.type,
       value,
       altKey: e.altKey,
