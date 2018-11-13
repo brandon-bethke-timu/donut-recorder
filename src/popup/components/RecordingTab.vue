@@ -82,12 +82,15 @@
       },
       wait () {
         this.sendMessage({ id: uuid(), action: 'wait*', value: this.options.global.wait })
+        this.scrollToEnd();
       },
       waitFor () {
         this.sendMessage({ id: uuid(), action: 'wait-for*' })
+        this.scrollToEnd();
       },
       textClick() {
         this.sendMessage({ id: uuid(), action: 'click-on*' })
+        this.scrollToEnd();
       },
       getActiveClass(event, index) {
         if(this.activeIndex == index){
