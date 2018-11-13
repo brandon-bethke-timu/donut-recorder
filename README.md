@@ -4,10 +4,10 @@ Donut recorder is a Chrome extension that records your browser interactions and 
 
 ## Basic Usage
 
-1. Click the icon and then click 'Record'.
+1. Click the icon and then click the record icon.
 2. Perform ui actions.
-3. Click 'Pause' to temporarily stop recording actions. Click 'Resume' to continue recording.
-4. Click 'Stop' to stop recording and code will be generated.
+3. Click the pause button to temporarily stop recording. Click the pause button again to continue recording.
+4. Click the record icon again to stop recording and code will be generated.
 
 ## Advanced Usage
 - Tapping <kbd>alt</kbd> after typing in an `input` element will cause all the immediately preceeding and grouped keydown events to be emmitted as a single command. The keycode is configurable in the options.

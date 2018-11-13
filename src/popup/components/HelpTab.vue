@@ -3,12 +3,10 @@
     <div class="content">
       <h4>Recording</h4>
       <ul>
-        <li>To start recording hit Record.</li>
-        <li>Hit <kbd>tab</kbd> after you finish typing in an <kbd>input</kbd> element.</li>
-        <li>Click links, inputs and other elements.</li>
-        <li>Wait for full page load on each navigation. The icon will switch from <img src="/images/icon_rec.png"> to
-          <img src="/images/icon_wait.png">.</li>
-        <li>Click Pause when you want to navigate without recording anything. Hit Resume to continue recording.</li>
+        <li>To start recording click the record button</li>
+        <li>Perform ui actions</li>
+        <li>Click the pause button to temporarily stop recording. Click the pause button again to continue recording.</li>
+        <li>Click the record icon again to stop recording and code will be generated.</li>
       </ul>
     </div>
   </div>
