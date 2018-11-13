@@ -71,7 +71,9 @@ See src/code-generators/code-generator-puppeteer.js for an example
 
 ## Known Issues
 
-See 'Unknown Issues'
+1. The puppeteer code generator does not support variables at the moment.
+
+2. See 'Unknown Issues'
 
 ## Unknown Issues
 
