@@ -12,8 +12,7 @@ const base = {
   entry: {
     background: './src/background/index.js',
     'content-script': './src/content-scripts/index.js',
-    popup: './src/popup/index.js',
-    options: './src/options/index.js'
+    popup: './src/popup/index.js'
   },
   resolve: {
     alias: {
@@ -66,12 +65,6 @@ const base = {
     new HtmlWebpackPlugin({
       template: './src/popup/template.html',
       chunks: ['popup']}),
-    new HtmlWebpackPlugin({
-      template: './src/options/template.html',
-      chunks: ['options'],
-      filename: 'options.html'
-
-    }),
     new VueLoaderPlugin(),
     new webpack.DefinePlugin({
       'process.env': {

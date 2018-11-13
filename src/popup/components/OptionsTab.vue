@@ -1,13 +1,11 @@
 <template>
   <div class="options">
     <div class="container">
-      <div class="header">
-        Recorder Options
+      <div class="content" v-if="!loading">
+        <h4 class="settings-block-title">Options</h4>
         <small class="saving-badge text-muted" v-show="saving">
           Saving...
         </small>
-      </div>
-      <div class="content" v-if="!loading">
         <div class="settings-block">
           <h4 class="settings-block-title">Code Generator Settings</h4>
           <div class="settings-block-main">
@@ -108,14 +106,8 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    overflow: auto;
-    position: fixed;
-    left: 0;
-    top: 0;
 
     .container {
-      padding: 0 2 * $spacer;
-      width: 550px;
       margin: 0 auto;
 
       .content {

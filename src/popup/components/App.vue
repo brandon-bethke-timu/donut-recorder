@@ -18,17 +18,18 @@
         <a href="#" @click="toggleShowHelp" class="header-button">
           <img src="/images/icon-help.svg" alt="help">
         </a>
-        <a href="#" @click="openOptions" class="header-button">
+        <a href="#" @click="toggleShowOptions" class="header-button">
           <img src="/images/icon-settings.svg" alt="settings">
         </a>
       </div>
     </div>
     <div class="main">
-      <div v-show="!showHelp">
+      <div v-show="!showHelp && !showOptions">
         <RecordingTab :code="code" :is-recording="isRecording" :live-events="recording" v-show="!showResults"/>
         <ResultsTab :code="code" :restart="restart" v-show="showResults"/>
       </div>
       <HelpTab v-show="showHelp"></HelpTab>
+      <OptionsTab v-show="showOptions"></OptionsTab>
     </div>
   </div>
 </template>
@@ -38,18 +39,20 @@
   import RecordingTab from "./RecordingTab.vue"
   import ResultsTab from "./ResultsTab.vue";
   import HelpTab from "./HelpTab.vue";
+  import OptionsTab from "./OptionsTab.vue";
   import { global } from '../../code-generator/global-settings'
   import uuid from '../../background/uuid'
   import { CodeGenerator, generators } from '../../code-generator/code-generator'
 
   export default {
     name: 'App',
-    components: { ResultsTab, RecordingTab, HelpTab },
+    components: { ResultsTab, RecordingTab, HelpTab, OptionsTab },
     data () {
       return {
         code: '',
         showResults: false,
         showHelp: false,
+        showOptions: false,
         recording: [],
         isRecording: false,
         isPaused: false,
@@ -170,9 +173,19 @@
       goHome () {
         this.showResults = false
         this.showHelp = false
+        this.showOptions = false
       },
       toggleShowHelp () {
         this.showHelp = !this.showHelp
+        if(this.showHelp){
+          this.showOptions = false;
+        }
+      },
+      toggleShowOptions() {
+        this.showOptions = !this.showOptions
+        if(this.showOptions){
+          this.showHelp = false
+        }
       }
     },
     computed: {
