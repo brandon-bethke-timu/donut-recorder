@@ -3,11 +3,16 @@ import Block from './block'
 import {global} from './global-settings'
 //import {details as eventToString} from 'key-event-to-string'
 
+export const options = [
+    { type: "checkbox", name: "ignoreUncaughtExceptions", title: "Ignore uncaught exceptions", value: false, id: "ignoreUncaughtExceptions"},
+    { type: "textbox", name: "typingDelay", title: "The delay between keystrokes", value: 100, id: "typingDelay"}
+]
+
 const newLine = '\n';
 
-const descHeader = `describe("", async function(){\n`
+const descHeader = `describe("", function(){\n`
 const descFooter = `})\n`
-const itemHeader = `  it("", async function(){\n`
+const itemHeader = `  it("", function(){\n`
 const itemFooter = `  })\n`
 
 export class CodeGeneratorCypress {
@@ -22,12 +27,36 @@ export class CodeGeneratorCypress {
   }
 
   generate (events) {
-    return descHeader
+
+    return this.addGlobalVariables() + newLine
+           + this.addGlobalMethods() + newLine
+           + descHeader
            + itemHeader
            + this.addSetup()
            + this.parseEvents(events)
            + itemFooter
            + descFooter
+           + newLine
+           + (this._options.ignoreUncaughtExceptions ? this.addUncaughtException() : '')
+  }
+
+  addUncaughtException(){
+    let result = ''
+    let block = new Block(this._frameId)
+
+    block.addLine({value: `Cypress.on('uncaught:exception', (err, runnable) => {`})
+    block.addLine({value: `  return false`})
+    block.addLine({value: `})`})
+
+    this.addBlock(block);
+    for (let block of this._blocks) {
+      const lines = block.getLines()
+      for (let line of lines) {
+        result += line.value + newLine
+      }
+    }
+    this._blocks = [];
+    return result + newLine
   }
 
   addImports(){
@@ -72,8 +101,9 @@ export class CodeGeneratorCypress {
     let block = new Block(this._frameId);
 
     //Example
-    //block.addLine({value: `const xxx = function(){`})
-    //block.addLine({value: `}`})
+    block.addLine({value: `let getString = function(){`})
+    block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
+    block.addLine({value: `}`})
 
     this.addBlock(block);
     for (let block of this._blocks) {
@@ -114,7 +144,7 @@ export class CodeGeneratorCypress {
   parseEvents (events) {
     let result = ''
     for (let i = 0; i < events.length; i++) {
-      const { name, type, key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
+      const { name, key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
       // we need to keep a handle on what frames events originate from
       this._setFrames(frameId, frameUrl)
 
@@ -204,7 +234,7 @@ export class CodeGeneratorCypress {
           break
 
         case 'variable*':
-          this._blocks.push(this.handleVariable(name, value, type))
+          this._blocks.push(this.handleVariable(name, value))
           break;
       }
     }
@@ -221,22 +251,22 @@ export class CodeGeneratorCypress {
     return result
   }
 
-  isVariable(expression){
-    let pattern = new RegExp("\{\{([A-Za-z0-9]*)\}\}");
-    let groups = pattern.exec(expression);
-    if(groups && groups.length == 2){
-      return groups[1]
-    }
-    return undefined
-  }
-
   format(expression){
-    let isVariable = this.isVariable(expression);
-    if(isVariable){
-      return isVariable
-    } else {
-      return `'${expression}'`;
+    if(expression.match(/^['].*[']$/)){
+      return expression
     }
+
+    if(expression.match(/^["].*["]$/)){
+      return expression
+    }
+    let isExpression = false
+    isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
+    isExpression = isExpression || expression.match(/getString\(\)/)
+    let temp = expression.replace(/\{\{([A-Za-z0-9]*)\}\}/, "$1")
+    if(isExpression){
+      return temp
+    }
+    return `'${temp}'`
   }
 
   _setFrames (frameId, frameUrl) {
@@ -260,16 +290,12 @@ export class CodeGeneratorCypress {
     if (Object.keys(this._allFrames).length > 0) {
       this._postProcessSetFrames()
     }
-
   }
 
-  handleVariable(name, value, type){
+  handleVariable(name, value){
+    value = this.format(value)
     const block = new Block(this._frameId, 2)
-    if(type === "string"){
-      block.addLine({value: `let ${name} = "${value}"`})
-    } else {
-      block.addLine({value: `let ${name} = ${value}`})
-    }
+    block.addLine({value: `let ${name} = ${value}`})
     return block;
   }
 
@@ -296,9 +322,9 @@ export class CodeGeneratorCypress {
     innerText = this.format(innerText)
     const block = new Block(this._frameId, 2)
     if(id){
-      block.addLine({ value: `cy.get('#${id}').click({force: true})`})
+      block.addLine({ value: `cy.get('#${id}').click()`})
     } else {
-      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click({force: true})`})
+      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
     }
     return block
   }
@@ -319,19 +345,19 @@ export class CodeGeneratorCypress {
   _handleKeyDown (selector, value) {
     value = this.format(value);
     const block = new Block(this._frameId, 2)
-    block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: 50})` })
+    block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: ${this._options.typingDelay}})` })
     return block
   }
 
   _handleKeyPress(selector, value) {
     const block = new Block(this._frameId, 2)
-    block.addLine({value: `cy.get('${selector}').type('${value}', {delay: 50})`})
+    block.addLine({value: `cy.get('${selector}').type('${value}', {delay: ${this._options.typingDelay}})`})
     return block
   }
 
   _handleClick (selector) {
     const block = new Block(this._frameId, 2)
-    block.addLine({ value: `cy.get("${selector}").click({force: true})`})
+    block.addLine({ value: `cy.get("${selector}").click()`})
     return block
   }
 
@@ -341,7 +367,8 @@ export class CodeGeneratorCypress {
   }
 
   _handleGoto (href) {
-    const block = new Block(this._frameId, 2, { value: `cy.visit('${href}')` })
+    href = this.format(href)
+    const block = new Block(this._frameId, 2, { value: `cy.visit(${href})` })
     return block
   }
 

@@ -5,7 +5,8 @@ import {global} from './global-settings'
 export const options = [
     { type: "checkbox", name: "mocha", title: "in mocha test format", value: false, id: "mocha"},
     { type: "checkbox", name: "headless", title: "headless", value: false, id: "headless"},
-    { type: "checkbox", name: "waitForNavigation", title: "add 'waitForNavigation' lines on navigation", value: true, id: "waitForNavigation"}
+    { type: "checkbox", name: "waitForNavigation", title: "add 'waitForNavigation' lines on navigation", value: true, id: "waitForNavigation"},
+    { type: "textbox", name: "typingDelay", title: "The delay between keystrokes", value: 100, id: "typingDelay"}
 ]
 
 const newLine = '\n';
@@ -108,8 +109,12 @@ export class CodeGeneratorPuppeteer {
     block.addLine({value: `  if(press){`})
     block.addLine({value: `    await e.press(message)`})
     block.addLine({value: `  } else {`})
-    block.addLine({value: `    await e.type(message, {delay: 50})`})
+    block.addLine({value: `    await e.type(message, {delay: ${this._options.typingDelay}})`})
     block.addLine({value: `  }`})
+    block.addLine({value: `}`})
+
+    block.addLine({value: `let getString = function(){`})
+    block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
     block.addLine({value: `}`})
 
     this.addBlock(block);
@@ -155,7 +160,7 @@ export class CodeGeneratorPuppeteer {
     let result = ''
 
     for (let i = 0; i < events.length; i++) {
-      const { name, type, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
+      const { name, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
       // we need to keep a handle on what frames events originate from
       this._setFrames(frameId, frameUrl)
 
@@ -244,7 +249,7 @@ export class CodeGeneratorPuppeteer {
           break
 
         case 'variable*':
-          this._blocks.push(this.handleVariable(name, value, type))
+          this._blocks.push(this.handleVariable(name, value))
           break
       }
     }
@@ -259,6 +264,24 @@ export class CodeGeneratorPuppeteer {
     }
 
     return result
+  }
+
+  format(expression){
+    if(expression.match(/^['].*[']$/)){
+      return expression
+    }
+
+    if(expression.match(/^["].*["]$/)){
+      return expression
+    }
+    let isExpression = false
+    isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
+    isExpression = isExpression || expression.match(/getString\(\)/)
+    let temp = expression.replace(/\{\{([A-Za-z0-9]*)\}\}/, "$1")
+    if(isExpression){
+      return temp
+    }
+    return `'${temp}'`
   }
 
   _setFrames (frameId, frameUrl) {
@@ -285,13 +308,10 @@ export class CodeGeneratorPuppeteer {
 
   }
 
-  handleVariable(name, value, type){
+  handleVariable(name, value){
+    value = this.format(value)
     const block = new Block(this._frameId, indentLevel)
-    if(type === "string"){
-      block.addLine({value: `let ${name} = "${value}"`})
-    } else {
-      block.addLine({value: `let ${name} = ${value}`})
-    }
+    block.addLine({value: `let ${name} = ${value}`})
     return block;
   }
 
@@ -317,23 +337,25 @@ export class CodeGeneratorPuppeteer {
   }
 
   _handleClickText(id, tagName, innerText) {
+    innerText = this.format(innerText)
     const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await click('#${id}')`})
     } else {
-      block.addLine({ value: `await click('//${tagName}[normalize-space() = "${innerText}"]')`})
+      block.addLine({ value: `await click('//${tagName}[normalize-space() = ${innerText}]')`})
     }
     return block
   }
 
   _handleWaitFor(id, selector, tagName, innerText) {
+    innerText = this.format(innerText)
     const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await ${this._frame}.waitFor('#${id}', {visible: true})`})
     } else if(selector) {
       block.addLine({ value: `await ${this._frame}.waitFor('${selector}', {visible: true})` })
     } else {
-      block.addLine({ value: `await ${this._frame}.waitFor('//${tagName}[normalize-space() = "${innerText}"]', {visible: true})`})
+      block.addLine({ value: `await ${this._frame}.waitFor('//${tagName}[normalize-space() = ${innerText}]', {visible: true})`})
     }
     return block
   }
@@ -345,8 +367,9 @@ export class CodeGeneratorPuppeteer {
   }
 
   _handleKeyDown (selector, value) {
+    value = this.format(value);
     const block = new Block(this._frameId, indentLevel)
-    block.addLine({ value: `await type('${selector}', '${value}')` })
+    block.addLine({ value: `await type('${selector}', ${value})` })
     return block
   }
 
@@ -366,7 +389,8 @@ export class CodeGeneratorPuppeteer {
     return block
   }
   _handleGoto (href) {
-    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.goto('${href}')` })
+    href = this.format(href)
+    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.goto(${href})` })
     return block
   }
 

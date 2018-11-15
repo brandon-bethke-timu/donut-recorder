@@ -4,12 +4,14 @@
             <div class="event-property-names">
                 <div><label>Name:</label></div>
                 <div><label>Value:</label></div>
-                <div><label>Type:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.name" type="textbox" v-on:change="save(event)"></div>
-                <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
-                <div><input class="event-edit-property" v-model="event.type" type="textbox" v-on:change="save(event)"></div>
+                <div>
+                    <input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)">
+                </div>
+            </div>
+            <div>
             </div>
         </div>
         <div v-show="event.action === 'wait*'" class="event-property-table">

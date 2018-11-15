@@ -185,6 +185,8 @@
         this.showOptions = !this.showOptions
         if(this.showOptions){
           this.showHelp = false
+        } else if(!this.isRecording){
+          this.refresh()
         }
       }
     },

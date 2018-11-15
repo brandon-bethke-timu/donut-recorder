@@ -77,7 +77,7 @@
         container.scrollTop = container.scrollHeight;
       },
       variable () {
-        this.sendMessage({ id: uuid(), action: 'variable*', name: "myvariable",  value: "myvalue", type: "string" })
+        this.sendMessage({ id: uuid(), action: 'variable*', name: "myvariable",  value: "myvalue" })
         this.scrollToEnd();
       },
       wait () {
@@ -154,7 +154,7 @@
         if (event.action === 'wait-for-text*') return this.substring(`text: ${event.target.innerText}`)
         if (event.action === 'type-text*') return this.substring(`text: ${event.value}`)
         if (event.action === 'wait*') return `timeout: ${event.value}`
-        if (event.action === 'variable*') return this.substring(`name: ${event.name}, value: ${event.value}, type: ${event.type}`)
+        if (event.action === 'variable*') return this.substring(`name: ${event.name}, value: ${event.value}`)
         return ''
       }
     }
