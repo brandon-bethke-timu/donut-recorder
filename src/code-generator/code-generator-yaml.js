@@ -10,6 +10,10 @@ export class CodeGeneratorYaml {
         let il = {
             actions: events
         }
+        var actionLength = il.actions.length;
+        for (var i = 0; i < actionLength; i++) {
+            delete il.actions[i].id
+        }
         return yaml.dump(il)
     }
 }

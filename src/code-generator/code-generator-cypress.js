@@ -120,10 +120,16 @@ export class CodeGeneratorCypress {
   addSetup(){
     let result = ''
     let block = new Block(this._frameId, 2);
-    var cookies = JSON.parse(this._options.cookies)
+    let cookies = JSON.parse(this._options.cookies)
     for (var key in cookies) {
-      var keyValue = JSON.stringify(cookies[key])
-      block.addLine({value: `cy.setCookie(${keyValue})`})
+      let keyValue = JSON.stringify(cookies[key])
+      let cookieOptions = JSON.parse(keyValue)
+      let name = cookies[key].name;
+      let value = cookies[key].value;
+      delete cookieOptions.name;
+      delete cookieOptions.value;
+      cookieOptions = JSON.stringify(cookieOptions);
+      block.addLine({value: `cy.setCookie("${name}", "${value}", ${cookieOptions})`})
     }
 
     this.addBlock(block);

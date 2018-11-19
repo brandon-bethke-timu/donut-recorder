@@ -281,7 +281,7 @@ export class CodeGeneratorPuppeteer {
     if(isExpression){
       return temp
     }
-    return `'${temp}'`
+    return `"${temp}"`
   }
 
   _setFrames (frameId, frameUrl) {
