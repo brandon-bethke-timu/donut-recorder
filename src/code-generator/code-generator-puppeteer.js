@@ -5,18 +5,10 @@ import {global} from './global-settings'
 export const options = [
     { type: "checkbox", name: "mocha", title: "in mocha test format", value: false, id: "mocha"},
     { type: "checkbox", name: "headless", title: "headless", value: false, id: "headless"},
-    { type: "checkbox", name: "waitForNavigation", title: "add 'waitForNavigation' lines on navigation", value: true, id: "waitForNavigation"},
     { type: "textbox", name: "typingDelay", title: "The delay between keystrokes", value: 100, id: "typingDelay"}
 ]
 
 const newLine = '\n';
-
-const descHeader = `describe("", async function(){\n`
-const descFooter = `})\n`
-const itemHeader = `  it("", async function(){\n`
-const itemFooter = `  })\n`
-
-let indentLevel = 0;
 
 export class CodeGeneratorPuppeteer {
   constructor (options) {
@@ -26,83 +18,61 @@ export class CodeGeneratorPuppeteer {
     this._frameId = 0
     this._allFrames = {}
     this._navigationPromiseSet = false
-    if(this._options.mocha) {
-      indentLevel = 2;
-    }
-
+    this.language = "js"
   }
 
   generate (events) {
+    let block = new Block(this._frameId, 0)
 
-    let script = this.addImports() + newLine
-    + this.addGlobalVariables() + newLine
-    + this.addGlobalMethods() + newLine
-
+    this.addImports(block)
+    block.addLine({value: ''})
+    this.addGlobalVariables(block)
+    block.addLine({value: ''})
+    this.addGlobalMethods(block)
+    block.addLine({value: ''})
     if(this._options.mocha){
-      script = script + descHeader + newLine
-      + itemHeader
+      block.addLine({value: `describe("", async function(){`})
+      block.addLine({value: `  it("", async function(){`})
+      block.setIndent(2)
+    }
+    this.addSetup(block)
+    this.addEvents(block, events)
+    if(!this._options.mocha){
+        block.addLine({value: `browser.close()`})
+    }
+    if(this._options.mocha){
+        block.setIndent(0)
+        block.addLine({value: `  })`})
+        block.addLine({value: `  after(async function(){`})
+        block.addLine({value: `    browser.close()`})
+        block.addLine({value: `  })`})
+        block.addLine({value: `})`})
     }
 
-    script = script + this.addSetup()
-    + this.parseEvents(events)
-
-    let block = new Block(this._frameId, indentLevel);
-    block.addLine({value: `browser.close()\n`})
     const lines = block.getLines()
+    let script = ''
     for (let line of lines) {
       script = script + line.value + newLine
-    }
-
-    if(this._options.mocha){
-      script = script + itemFooter
-      + descFooter
     }
 
     return script;
   }
 
-  addImports(){
-    let result = ''
-    let block = new Block(this._frameId);
+  addImports(block){
     block.addLine({value: `import puppeteer from 'puppeteer';`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result
   }
 
-  addGlobalVariables(){
-    let result = ''
-    let block = new Block(this._frameId);
+  addGlobalVariables(block){
     block.addLine({value: `let browser = undefined;`})
     block.addLine({value: `let page = undefined;`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result
   }
 
-  addGlobalMethods(){
-
-    let result = ''
-    let block = new Block(this._frameId);
-
+  addGlobalMethods(block){
     block.addLine({value: `const click = async function(path){`})
     block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
     block.addLine({value: `  await e.click()`})
     block.addLine({value: `}`})
+    block.addLine({value: ''})
 
     block.addLine({value: `const type = async function(path, message, press){`})
     block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
@@ -112,26 +82,14 @@ export class CodeGeneratorPuppeteer {
     block.addLine({value: `    await e.type(message, {delay: ${this._options.typingDelay}})`})
     block.addLine({value: `  }`})
     block.addLine({value: `}`})
+    block.addLine({value: ''})
 
     block.addLine({value: `let getString = function(){`})
     block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
     block.addLine({value: `}`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result
-
   }
 
-  addSetup(){
-    let result = ''
-    let block = new Block(this._frameId, indentLevel);
+  addSetup(block){
     block.addLine({value: `browser = await puppeteer.launch( {headless: ${this._options.headless}} );`})
     block.addLine({value: `page = await browser.newPage();`})
 
@@ -140,25 +98,13 @@ export class CodeGeneratorPuppeteer {
       var keyValue = JSON.stringify(cookies[key])
       block.addLine({value: `await page.setCookie(${keyValue})`})
     }
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result
   }
 
   addBlock(block){
     this._blocks.push(block)
   }
 
-  parseEvents (events) {
-    let result = ''
-
+  addEvents (block, events) {
     for (let i = 0; i < events.length; i++) {
       const { name, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
       // we need to keep a handle on what frames events originate from
@@ -196,77 +142,70 @@ export class CodeGeneratorPuppeteer {
 
           if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
           } else {
-            this._blocks.push(this._handleKeyPress(target.selector, key))
+            this._handleKeyPress(block, target.selector, key)
           }
           break
 
+        case 'wait-for-selector*':
+          this._handleWaitFor(block, undefined, target.selector, undefined, undefined)
+          break;
+
         case 'wait-for-text*':
-          this._blocks.push(this._handleWaitFor(undefined, undefined, target.tagName, target.innerText))
+          this._handleWaitFor(block, undefined, undefined, target.tagName, target.innerText)
           break;
 
         case 'click-text*':
-          this._blocks.push(this._handleClickText(undefined, target.tagName, target.innerText))
+          this._handleClickText(block, undefined, target.tagName, target.innerText)
           break;
 
         case 'type-text*':
-          this._blocks.push(this._handleKeyDown(target.selector, value, keyCode))
+          this._handleKeyDown(block, target.selector, value, keyCode)
           break;
 
         case 'mousedown':
           if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            const block = new Block(this._frameId, indentLevel)
             block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
-            this._blocks.push(block)
             this._navigationPromiseSet = true
           }
-          this._blocks.push(this._handleClick(target.selector))
+          this._handleClick(block, target.selector)
           break
 
         case 'change':
           if (target.tagName === 'SELECT') {
-            this._blocks.push(this._handleChange(target.selector, value))
+            this._handleChange(block, target.selector, value)
           }
           break
 
         case 'goto*':
-          this._blocks.push(this._handleGoto(value, frameId))
+          this._handleGoto(block, value, frameId)
           break
 
         case 'viewport*':
-          this._blocks.push((this._handleViewport(value.width, value.height)))
+          this._handleViewport(block, value.width, value.height)
           break
 
         case 'navigation*':
-          this._blocks.push(this._handleWaitForNavigation())
+          this._handleWaitForNavigation(block)
           break
 
         case 'wait*':
-          this._blocks.push(this._handleAddWait(value))
+          this._handleAddWait(block, value)
           break
 
         case 'set-local-storage*':
-          this._blocks.push(this._handleSetLocalStorage())
+          this._handleSetLocalStorage(block)
           break
 
         case 'variable*':
-          this._blocks.push(this.handleVariable(name, value))
+          this.handleVariable(block, name, value)
           break
       }
     }
-
-    this._postProcess()
-
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-
-    return result
   }
 
   format(expression){
+    if(!expression) return expression;
+
     if(expression.match(/^['].*[']$/)){
       return expression
     }
@@ -295,29 +234,12 @@ export class CodeGeneratorPuppeteer {
     }
   }
 
-  _postProcess () {
-    // we want to create only one navigationPromise
-    if (this._options.waitForNavigation && !this._navigationPromiseSet) {
-      this._postProcessWaitForNavigation()
-    }
-
-    // when events are recorded from different frames, we want to add a frame setter near the code that uses that frame
-    if (Object.keys(this._allFrames).length > 0) {
-      this._postProcessSetFrames()
-    }
-
-  }
-
-  handleVariable(name, value){
+  handleVariable(block, name, value){
     value = this.format(value)
-    const block = new Block(this._frameId, indentLevel)
     block.addLine({value: `let ${name} = ${value}`})
-    return block;
   }
 
-  _handleSetLocalStorage() {
-    const block = new Block(this._frameId, indentLevel)
-    let script = ""
+  _handleSetLocalStorage(block) {
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
       block.addLine({ value: `await page.evaluate(() => {`})
@@ -327,29 +249,23 @@ export class CodeGeneratorPuppeteer {
       }
       block.addLine({ value: `})`})
     }
-    return block
   }
 
-  _handleAddWait(period) {
-    const block = new Block(this._frameId, indentLevel)
+  _handleAddWait(block, period) {
     block.addLine({ value: `await page.waitFor(${period});`})
-    return block
   }
 
-  _handleClickText(id, tagName, innerText) {
+  _handleClickText(block, id, tagName, innerText) {
     innerText = this.format(innerText)
-    const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await click('#${id}')`})
     } else {
       block.addLine({ value: `await click('//${tagName}[normalize-space() = ${innerText}]')`})
     }
-    return block
   }
 
-  _handleWaitFor(id, selector, tagName, innerText) {
+  _handleWaitFor(block, id, selector, tagName, innerText) {
     innerText = this.format(innerText)
-    const block = new Block(this._frameId, indentLevel)
     if(id){
       block.addLine({ value: `await ${this._frame}.waitFor('#${id}', {visible: true})`})
     } else if(selector) {
@@ -357,80 +273,34 @@ export class CodeGeneratorPuppeteer {
     } else {
       block.addLine({ value: `await ${this._frame}.waitFor('//${tagName}[normalize-space() = ${innerText}]', {visible: true})`})
     }
-    return block
   }
 
-  _handleEnter(selector) {
-    const block = new Block(this._frameId, indentLevel)
+  _handleEnter(block, selector) {
     block.addLine({value: `await page.keyboard.press('Enter')`})
-    return block
   }
 
-  _handleKeyDown (selector, value) {
+  _handleKeyDown (block, selector, value) {
     value = this.format(value);
-    const block = new Block(this._frameId, indentLevel)
     block.addLine({ value: `await type('${selector}', ${value})` })
-    return block
   }
 
-  _handleKeyPress(selector, value) {
-    const block = new Block(this._frameId, indentLevel)
+  _handleKeyPress(block, selector, value) {
     block.addLine({value: `await type('${selector}', '${value}', true)`})
-    return block
   }
 
-  _handleClick (selector) {
-    const block = new Block(this._frameId, indentLevel)
-    block.addLine({ value: `await click("${selector}")`})
-    return block
+  _handleClick (block, selector) {
+    block.addLine({ value: `await click('${selector}')`})
   }
-  _handleChange (selector, value) {
-    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.select('${selector}', '${value}')` })
-    return block
+  _handleChange (block, selector, value) {
+    block.addLine({ value: `await ${this._frame}.select('${selector}', '${value}')` })
   }
-  _handleGoto (href) {
+  _handleGoto (block, href) {
     href = this.format(href)
-    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.goto(${href})` })
-    return block
+    block.addLine({ value: `await ${this._frame}.goto(${href})` })
   }
 
-  _handleViewport (width, height) {
-    const block = new Block(this._frameId, indentLevel, { value: `await ${this._frame}.setViewport({ width: ${width}, height: ${height} })` })
-    return block
+  _handleViewport (block, width, height) {
+    block.addLine({ value: `await ${this._frame}.setViewport({ width: ${width}, height: ${height} })` })
   }
 
-  _handleWaitForNavigation () {
-    const block = new Block(this._frameId, indentLevel)
-    if (this._options.waitForNavigation) {
-      block.addLine({value: `await navigationPromise`})
-    }
-    return block
-  }
-
-  _postProcessWaitForNavigation () {
-    for (let [i, block] of this._blocks.entries()) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        if (line.type === messageActions.NAVIGATION) {
-          this._blocks[i].addLineToTop({value: `const navigationPromise = page.waitForNavigation()`})
-          return
-        }
-      }
-    }
-  }
-
-  _postProcessSetFrames () {
-    for (let [i, block] of this._blocks.entries()) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        if (line.frameId && Object.keys(this._allFrames).includes(line.frameId.toString())) {
-          const declaration = `const frame_${line.frameId} = frames.find(f => f.url() === '${this._allFrames[line.frameId]}')`
-          this._blocks[i].addLineToTop(({ value: declaration }))
-          this._blocks[i].addLineToTop({ value: 'let frames = await page.frames()' })
-          delete this._allFrames[line.frameId]
-          break
-        }
-      }
-    }
-  }
 }

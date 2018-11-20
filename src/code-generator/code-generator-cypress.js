@@ -10,116 +10,67 @@ export const options = [
 
 const newLine = '\n';
 
-const descHeader = `describe("", function(){\n`
-const descFooter = `})\n`
-const itemHeader = `  it("", function(){\n`
-const itemFooter = `  })\n`
-
 export class CodeGeneratorCypress {
   constructor (options) {
     this._options = Object.assign(global, options)
-    this._blocks = []
     this._frame = 'page'
     this._frameId = 0
     this._allFrames = {}
-    this._navigationPromiseSet = false
-    this.variables = []
+    this.language = "js"
   }
 
   generate (events) {
+    let block = new Block(this._frameId, 0)
 
-    return this.addGlobalVariables() + newLine
-           + this.addGlobalMethods() + newLine
-           + descHeader
-           + itemHeader
-           + this.addSetup()
-           + this.parseEvents(events)
-           + itemFooter
-           + descFooter
-           + newLine
-           + (this._options.ignoreUncaughtExceptions ? this.addUncaughtException() : '')
-  }
-
-  addUncaughtException(){
-    let result = ''
-    let block = new Block(this._frameId)
-
-    block.addLine({value: `Cypress.on('uncaught:exception', (err, runnable) => {`})
-    block.addLine({value: `  return false`})
+    this.addImports(block)
+    block.addLine({value: ''})
+    this.addGlobalVariables(block)
+    block.addLine({value: ''})
+    this.addGlobalMethods(block)
+    block.addLine({value: ''})
+    block.addLine({value: `describe("", async function(){`})
+    block.addLine({value: `  it("", async function(){`})
+    block.setIndent(2)
+    this.addSetup(block)
+    this.addEvents(block, events)
+    block.setIndent(0)
+    block.addLine({value: `  })`})
     block.addLine({value: `})`})
+    this.addUncaughtException(block)
 
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
+    const lines = block.getLines()
+    let script = ''
+    for (let line of lines) {
+      script = script + line.value + newLine
     }
-    this._blocks = [];
-    return result + newLine
+
+    return script;
   }
 
-  addImports(){
-    let result = ''
-    let block = new Block(this._frameId);
+  addUncaughtException(block){
+    if(this._options.ignoreUncaughtExceptions){
+        block.addLine({value: `Cypress.on('uncaught:exception', (err, runnable) => {`})
+        block.addLine({value: `  return false`})
+        block.addLine({value: `})`})
+    }
+  }
 
-    //Example
+  addImports(block){
     //block.addLine({value: `import xxx from 'xxx';`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result + newLine
   }
 
-  addGlobalVariables(){
-    let result = ''
-    let block = new Block(this._frameId);
-
+  addGlobalVariables(block){
     //Example
     //block.addLine({value: `let xxx = {};`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result + newLine
   }
 
-  addGlobalMethods(){
-
-    let result = ''
-    let block = new Block(this._frameId);
-
-    //Example
+  addGlobalMethods(block){
     block.addLine({value: `let getString = function(){`})
     block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
     block.addLine({value: `}`})
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result + newLine
-
   }
 
-  addSetup(){
-    let result = ''
-    let block = new Block(this._frameId, 2);
+  addSetup(block){
     let cookies = JSON.parse(this._options.cookies)
     for (var key in cookies) {
       let keyValue = JSON.stringify(cookies[key])
@@ -131,24 +82,13 @@ export class CodeGeneratorCypress {
       cookieOptions = JSON.stringify(cookieOptions);
       block.addLine({value: `cy.setCookie("${name}", "${value}", ${cookieOptions})`})
     }
-
-    this.addBlock(block);
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-    this._blocks = [];
-    return result
   }
 
   addBlock(block){
     this._blocks.push(block)
   }
 
-  parseEvents (events) {
-    let result = ''
+  addEvents (block, events) {
     for (let i = 0; i < events.length; i++) {
       const { name, key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
       // we need to keep a handle on what frames events originate from
@@ -185,79 +125,71 @@ export class CodeGeneratorCypress {
         case 'keydown':
           if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
           } else if (keyCode == 13) {
-            this._blocks.push(this._handleKeyPress(target.selector, '{enter}'))
+            this._handleKeyPress(block, target.selector, '{enter}')
           } else {
-            this._blocks.push(this._handleKeyPress(target.selector, key))
+            this._handleKeyPress(block, target.selector, key)
           }
           break
+        case 'wait-for-selector*':
+          this._handleWaitFor(block, undefined, target.selector, undefined, undefined)
+          break;
 
         case 'wait-for-text*':
-          this._blocks.push(this._handleWaitFor(undefined, undefined, target.tagName, target.innerText))
+          this._handleWaitFor(block, undefined, undefined, target.tagName, target.innerText)
           break;
 
         case 'click-text*':
-          this._blocks.push(this._handleClickText(undefined, target.tagName, target.innerText))
+          this._handleClickText(block, undefined, target.tagName, target.innerText)
           break;
 
         case 'type-text*':
-          this._blocks.push(this._handleKeyDown(target.selector, value))
+          this._handleKeyDown(block, target.selector, value)
           break;
 
         case 'mousedown':
           if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            const block = new Block(this._frameId, 1)
             block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
-            this._blocks.push(block)
             this._navigationPromiseSet = true
           }
-          this._blocks.push(this._handleClick(target.selector))
+          this._handleClick(block, target.selector)
           break
 
         case 'change':
           if (target.tagName === 'SELECT') {
-            this._blocks.push(this._handleChange(target.selector, value))
+            this._handleChange(block, target.selector, value)
           }
           break
 
         case 'navigation*':
-          this._blocks.push(this._handleWaitForNavigation())
+          this._handleWaitForNavigation(block)
           break
 
         case 'wait*':
-          this._blocks.push(this._handleAddWait(value))
+          this._handleAddWait(block, value)
           break
 
         case 'set-local-storage*':
-          this._blocks.push(this._handleSetLocalStorage())
+          this._handleSetLocalStorage(block)
           break
 
         case 'goto*':
-          this._blocks.push(this._handleGoto(value, frameId))
+          this._handleGoto(block, value, frameId)
           break
 
         case 'viewport*':
-          //this._blocks.push((this._handleViewport(value.width, value.height)))
+          //this._handleViewport(block, value.width, value.height)
           break
 
         case 'variable*':
-          this._blocks.push(this.handleVariable(name, value))
+          this.handleVariable(block, name, value)
           break;
       }
     }
-
-    this._postProcess()
-
-    for (let block of this._blocks) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        result += line.value + newLine
-      }
-    }
-
-    return result
   }
 
   format(expression){
+    if(!expression) return expression;
+
     if(expression.match(/^['].*[']$/)){
       return expression
     }
@@ -286,28 +218,12 @@ export class CodeGeneratorCypress {
     }
   }
 
-  _postProcess () {
-    // we want to create only one navigationPromise
-    if (this._options.waitForNavigation && !this._navigationPromiseSet) {
-      this._postProcessWaitForNavigation()
-    }
-
-    // when events are recorded from different frames, we want to add a frame setter near the code that uses that frame
-    if (Object.keys(this._allFrames).length > 0) {
-      this._postProcessSetFrames()
-    }
-  }
-
-  handleVariable(name, value){
+  handleVariable(block, name, value){
     value = this.format(value)
-    const block = new Block(this._frameId, 2)
     block.addLine({value: `let ${name} = ${value}`})
-    return block;
   }
 
-  _handleSetLocalStorage() {
-    const block = new Block(this._frameId, 2)
-    let script = ""
+  _handleSetLocalStorage(block) {
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
       for (var key in storage) {
@@ -315,29 +231,23 @@ export class CodeGeneratorCypress {
         block.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
       }
     }
-    return block
   }
 
-  _handleAddWait(period) {
-    const block = new Block(this._frameId, 2)
+  _handleAddWait(block, period) {
     block.addLine({ value: `cy.wait(${period});`})
-    return block
   }
 
-  _handleClickText(id, tagName, innerText) {
+  _handleClickText(block, id, tagName, innerText) {
     innerText = this.format(innerText)
-    const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').click()`})
     } else {
       block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
     }
-    return block
   }
 
-  _handleWaitFor(id, selector, tagName, innerText) {
+  _handleWaitFor(block, id, selector, tagName, innerText) {
     innerText = this.format(innerText)
-    const block = new Block(this._frameId, 2)
     if(id){
       block.addLine({ value: `cy.get('#${id}').should('be.visible')`})
     } else if(selector) {
@@ -345,7 +255,6 @@ export class CodeGeneratorCypress {
     } else {
       block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
     }
-    return block
   }
 
   _handleKeyDown (selector, value) {
@@ -355,67 +264,25 @@ export class CodeGeneratorCypress {
     return block
   }
 
-  _handleKeyPress(selector, value) {
-    const block = new Block(this._frameId, 2)
+  _handleKeyPress(block, selector, value) {
     block.addLine({value: `cy.get('${selector}').type('${value}', {delay: ${this._options.typingDelay}})`})
-    return block
   }
 
-  _handleClick (selector) {
-    const block = new Block(this._frameId, 2)
+  _handleClick (block, selector) {
     block.addLine({ value: `cy.get("${selector}").click()`})
-    return block
   }
 
-  _handleChange (selector, value) {
-    const block = new Block(this._frameId, 2, { value: `cy.get('${selector}').select('${value}')` })
-    return block
+  _handleChange (block, selector, value) {
+    block.addLine({ value: `cy.get('${selector}').select('${value}')` })
   }
 
-  _handleGoto (href) {
+  _handleGoto (block, href) {
     href = this.format(href)
-    const block = new Block(this._frameId, 2, { value: `cy.visit(${href})` })
-    return block
+    block.addLine({ value: `cy.visit(${href})` })
   }
 
-  _handleViewport (width, height) {
-    const block = new Block(this._frameId, 2, { value: `cy.viewport(${width}, ${height})` })
-    return block
-  }
-
-  _handleWaitForNavigation () {
-    const block = new Block(this._frameId, 2)
-    if (this._options.waitForNavigation) {
-      block.addLine({value: `await navigationPromise`})
-    }
-    return block
-  }
-
-  _postProcessWaitForNavigation () {
-    for (let [i, block] of this._blocks.entries()) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        if (line.type === messageActions.NAVIGATION) {
-          this._blocks[i].addLineToTop({value: `const navigationPromise = page.waitForNavigation()`})
-          return
-        }
-      }
-    }
-  }
-
-  _postProcessSetFrames () {
-    for (let [i, block] of this._blocks.entries()) {
-      const lines = block.getLines()
-      for (let line of lines) {
-        if (line.frameId && Object.keys(this._allFrames).includes(line.frameId.toString())) {
-          const declaration = `const frame_${line.frameId} = frames.find(f => f.url() === '${this._allFrames[line.frameId]}')`
-          this._blocks[i].addLineToTop(({ value: declaration }))
-          this._blocks[i].addLineToTop({ value: 'let frames = await page.frames()' })
-          delete this._allFrames[line.frameId]
-          break
-        }
-      }
-    }
+  _handleViewport (block, width, height) {
+    block.addLine({ value: `cy.viewport(${width}, ${height})` })
   }
 
 }

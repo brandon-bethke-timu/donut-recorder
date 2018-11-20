@@ -69,6 +69,13 @@ See src/code-generators/code-generator-puppeteer.js for an example
    - Add an entry to `classes`
    - Custom options should be exprted from your module and added to the `options` array field in `generators.types`
 
+
+## CLI
+
+Example:
+
+    node -r esm ./src/dr-cli.js --type=cypress --opt ./ui-tests/cypress-options.json --file ./ui-tests/yaml/my-test.yaml
+
 ## Known Issues
 
 1. See 'Unknown Issues'

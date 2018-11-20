@@ -4,29 +4,39 @@ import { global } from './code-generator/global-settings'
 import yaml from 'js-yaml'
 import fs from 'fs'
 import flags from 'flags'
+import path from 'path'
 
 try {
 
-    flags.defineString('code', 'puppeteer', 'The code generator')
+    flags.defineString('type', 'puppeteer', 'The code generator')
     flags.defineString('file', 'il.yaml', 'The input yaml')
-    flags.defineString('output', 'result.js', 'The output file')
-    flags.defineString('options', 'options.json', 'Options file')
+    flags.defineString('out', '', 'The output file')
+    flags.defineString('opt', 'options.json', 'Options file')
     flags.parse();
 
-    let codeOption = flags.get('code');
+    let input = flags.get('file')
+    let out = flags.get('out')
+    if(out == ''){
+        out = path.parse(input).name
+    }
 
-    let options = JSON.parse(fs.readFileSync(flags.get('options'), 'utf8'));
+    let options = JSON.parse(fs.readFileSync(flags.get('opt'), 'utf8'));
     options = Object.assign(global, options);
 
-    let il = yaml.safeLoad(fs.readFileSync(flags.get('file'), 'utf8'));
+    let il = yaml.safeLoad(fs.readFileSync(input, 'utf8'));
     let generator = undefined;
-    if(codeOption === 'cypress'){
+    let type = flags.get('type');
+    if(type === 'cypress'){
        generator = new CodeGeneratorCypress(options)
-    } else if(codeOption === 'puppeteer'){
+    } else if(type === 'puppeteer'){
        generator = new CodeGeneratorPuppeteer(options)
     }
+    if(generator === undefined){
+        console.log("A valid code generator type must be specified")
+        exit(1)
+    }
     let code = generator.generate(il.actions)
-    fs.writeFileSync(flags.get('output'), code);
+    fs.writeFileSync(out + "." + generator.language, code);
 
 } catch (e) {
     console.log(e);

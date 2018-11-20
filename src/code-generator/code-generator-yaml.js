@@ -4,6 +4,7 @@ import yaml from 'js-yaml'
 export class CodeGeneratorYaml {
     constructor (options) {
         this._options = Object.assign(global, options)
+        this.language = "yaml"
     }
 
     generate (events) {

@@ -19,6 +19,10 @@ export default class Block {
     this._lines.push(this.indent(line))
   }
 
+  setIndent(indent){
+      this._indent = indent;
+  }
+
   indent(line){
     if(this._indent && this._indent > 0){
       let indentation = "";
