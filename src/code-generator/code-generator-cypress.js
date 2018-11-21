@@ -15,6 +15,23 @@ class BaseHandler {
         this.options = options
     }
 
+    isExpression(expression){
+        if(expression === undefined || expression === null){
+            return false;
+        }
+        if(expression.match(/^['].*[']$/)){
+            return true;
+        }
+
+        if(expression.match(/^["].*["]$/)){
+            return true;
+        }
+        let isExpression = false
+        isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
+        isExpression = isExpression || expression.match(/getString\(\)/)
+        return isExpression
+    }
+
     format(expression){
       if(!expression) return expression;
 
@@ -86,8 +103,13 @@ class WaitForTextHandler extends BaseHandler {
         let { target } = events[current]
         const tagName = target.tagName;
         let innerText = target.innerText;
+        const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
-        block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
+        if(isExpression){
+            block.addLine({ value: `cy.get("${tagName}:contains(\" + ${innerText} + \")").should('be.visible')`})
+        } else {
+            block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
+        }
     }
 }
 
@@ -96,8 +118,13 @@ class ClickTextHandler extends BaseHandler {
         let { target } = events[current]
         const tagName = target.tagName;
         let innerText = target.innerText;
+        const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
-        block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
+        if(isExpression){
+            block.addLine({ value: `cy.get("${tagName}:contains(\" + ${innerText} + \")").click()`})
+        } else {
+            block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
+        }
     }
 }
 
@@ -248,15 +275,16 @@ export class CodeGeneratorCypress {
   }
 
   addBlock(block){
-    this._blocks.push(block)
+      this._blocks.push(block)
   }
 
   addEvents (block, events) {
-    for (let i = 0; i < events.length; i++) {
-      const handler = this.handlers[action];
-      if(handler){
-          handler.handle(block, events, i);
+      for (let i = 0; i < events.length; i++) {
+          let {action} = events[i]
+          const handler = this.handlers[action];
+          if(handler){
+              handler.handle(block, events, i);
+          }
       }
-    }
   }
 }
