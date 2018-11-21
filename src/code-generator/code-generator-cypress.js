@@ -10,13 +10,176 @@ export const options = [
 
 const newLine = '\n';
 
+class BaseHandler {
+    constructor(options){
+        this.options = options
+    }
+
+    format(expression){
+      if(!expression) return expression;
+
+      if(expression.match(/^['].*[']$/)){
+        return expression
+      }
+
+      if(expression.match(/^["].*["]$/)){
+        return expression
+      }
+
+      let isExpression = false
+      isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
+      isExpression = isExpression || expression.match(/getString\(\)/)
+      let temp = expression.replace(/\{\{([A-Za-z0-9]*)\}\}/, "$1")
+      if(isExpression){
+        return temp
+      }
+      return `'${temp}'`
+    }
+
+    getPreviousEvent(events, index){
+      for(let i = index - 1; i >=0 ; i--) {
+        let previousEvent = events[i]
+        if(previousEvent.action === "mousemove"){
+          continue;
+        }
+        return previousEvent;
+      }
+      return undefined;
+    }
+
+    getNextEvent(events, index){
+      for(let i = index + 1; i < events.length; i++) {
+        let nextEvent = events[i]
+        if(nextEvent.action === "mousemove"){
+          continue;
+        }
+        return nextEvent;
+      }
+      return undefined;
+    }
+}
+
+class KeyDownHandler extends BaseHandler {
+    handle(block, events, current){
+        let { key, target } = events[current]
+        const selector = target.selector;
+        if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
+        } else if (keyCode == 13) {
+            block.addLine({value: `cy.get('${selector}').type('{enter}', {delay: ${this.options.typingDelay}})`})
+        } else {
+            key = this.format(key)
+            block.addLine({value: `cy.get('${selector}').type('${key}', {delay: ${this.options.typingDelay}})`})
+        }
+    }
+}
+
+class WaitForSelectorHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const selector = target.selector;
+        block.addLine({ value: `cy.get('${selector}').should('be.visible')` })
+    }
+}
+
+class WaitForTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const tagName = target.tagName;
+        let innerText = target.innerText;
+        innerText = this.format(innerText)
+        block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
+    }
+}
+
+class ClickTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const tagName = target.tagName;
+        let innerText = target.innerText;
+        innerText = this.format(innerText)
+        block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
+    }
+}
+
+class TypeTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value, target} = events[current]
+        const selector = target.selector;
+        value = this.format(value);
+        block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: ${this.options.typingDelay}})` })
+    }
+}
+
+class MouseDownHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const selector = target.selector;
+        block.addLine({ value: `cy.get("${selector}").click()`})
+    }
+}
+
+class ChangeHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value, target} = events[current]
+        const selector = target.selector;
+        if(target.tagName === "SELECT"){
+            block.addLine({ value: `cy.get('${selector}').select('${value}')` })
+        }
+    }
+}
+
+class WaitHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value } = events[current]
+        block.addLine({ value: `cy.wait(${value});`})
+    }
+}
+
+class SetLocalStorageHandler extends BaseHandler {
+    handle(block, events, current){
+        const storage = JSON.parse(this.options.localStorage)
+        if(Object.keys(storage).length > 0){
+          for (let key in storage) {
+            let keyValue = storage[key]
+            block.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
+          }
+        }
+    }
+}
+
+class GotoHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value } = events[current]
+        value = this.format(value)
+        block.addLine({ value: `cy.visit(${value})` })
+    }
+}
+
+class VariableHandler extends BaseHandler {
+    handle(block, events, current){
+        let { name, value } = events[current]
+        value = this.format(value)
+        block.addLine({value: `let ${name} = ${value}`})
+    }
+}
+
 export class CodeGeneratorCypress {
   constructor (options) {
-    this._options = Object.assign(global, options)
-    this._frame = 'page'
-    this._frameId = 0
-    this._allFrames = {}
+    this.options = Object.assign(global, options)
     this.language = "js"
+
+    this.handlers = []
+    this.handlers['keydown'] = new KeyDownHandler(this.options);
+    this.handlers['wait-for-selector*'] = new WaitForSelectorHandler(this.options);
+    this.handlers['wait-for-text*'] = new WaitForTextHandler(this.options);
+    this.handlers['click-text*'] = new ClickTextHandler(this.options);
+    this.handlers['type-text*'] = new TypeTextHandler(this.options);
+    this.handlers['mousedown'] = new MouseDownHandler(this.options);
+    this.handlers['change'] = new ChangeHandler(this.options);
+    this.handlers['wait*'] = new WaitHandler(this.options);
+    this.handlers['set-local-storage*'] = new SetLocalStorageHandler(this.options);
+    this.handlers['goto*'] = new GotoHandler(this.options);
+    this.handlers['variable*'] = new VariableHandler(this.options);
   }
 
   generate (events) {
@@ -48,7 +211,7 @@ export class CodeGeneratorCypress {
   }
 
   addUncaughtException(block){
-    if(this._options.ignoreUncaughtExceptions){
+    if(this.options.ignoreUncaughtExceptions){
         block.addLine({value: `Cypress.on('uncaught:exception', (err, runnable) => {`})
         block.addLine({value: `  return false`})
         block.addLine({value: `})`})
@@ -71,7 +234,7 @@ export class CodeGeneratorCypress {
   }
 
   addSetup(block){
-    let cookies = JSON.parse(this._options.cookies)
+    let cookies = JSON.parse(this.options.cookies)
     for (var key in cookies) {
       let keyValue = JSON.stringify(cookies[key])
       let cookieOptions = JSON.parse(keyValue)
@@ -90,199 +253,10 @@ export class CodeGeneratorCypress {
 
   addEvents (block, events) {
     for (let i = 0; i < events.length; i++) {
-      const { name, key, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey } = events[i]
-      // we need to keep a handle on what frames events originate from
-      this._setFrames(frameId, frameUrl)
-
-      const getPreviousEvent = function(index){
-        for(let i = index - 1; i >=0 ; i--) {
-          let previousEvent = events[i]
-          if(previousEvent.action === "mousemove"){
-            continue;
-          }
-          return previousEvent;
-        }
-        return undefined;
-      }
-
-      const getNextEvent = function(index){
-        for(let i = index + 1; i < events.length; i++) {
-          let nextEvent = events[i]
-          if(nextEvent.action === "mousemove"){
-            continue;
-          }
-          return nextEvent;
-        }
-        return undefined;
-      }
-      const previousEvent = getPreviousEvent(i);
-      const nextEvent = getNextEvent(i);
-
-      switch (action) {
-        case 'mousemove':
-          break
-
-        case 'keydown':
-          if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
-          } else if (keyCode == 13) {
-            this._handleKeyPress(block, target.selector, '{enter}')
-          } else {
-            this._handleKeyPress(block, target.selector, key)
-          }
-          break
-        case 'wait-for-selector*':
-          this._handleWaitFor(block, undefined, target.selector, undefined, undefined)
-          break;
-
-        case 'wait-for-text*':
-          this._handleWaitFor(block, undefined, undefined, target.tagName, target.innerText)
-          break;
-
-        case 'click-text*':
-          this._handleClickText(block, undefined, target.tagName, target.innerText)
-          break;
-
-        case 'type-text*':
-          this._handleKeyDown(block, target.selector, value)
-          break;
-
-        case 'mousedown':
-          if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
-            this._navigationPromiseSet = true
-          }
-          this._handleClick(block, target.selector)
-          break
-
-        case 'change':
-          if (target.tagName === 'SELECT') {
-            this._handleChange(block, target.selector, value)
-          }
-          break
-
-        case 'navigation*':
-          this._handleWaitForNavigation(block)
-          break
-
-        case 'wait*':
-          this._handleAddWait(block, value)
-          break
-
-        case 'set-local-storage*':
-          this._handleSetLocalStorage(block)
-          break
-
-        case 'goto*':
-          this._handleGoto(block, value, frameId)
-          break
-
-        case 'viewport*':
-          //this._handleViewport(block, value.width, value.height)
-          break
-
-        case 'variable*':
-          this.handleVariable(block, name, value)
-          break;
+      const handler = this.handlers[action];
+      if(handler){
+          handler.handle(block, events, i);
       }
     }
   }
-
-  format(expression){
-    if(!expression) return expression;
-
-    if(expression.match(/^['].*[']$/)){
-      return expression
-    }
-
-    if(expression.match(/^["].*["]$/)){
-      return expression
-    }
-    let isExpression = false
-    isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
-    isExpression = isExpression || expression.match(/getString\(\)/)
-    let temp = expression.replace(/\{\{([A-Za-z0-9]*)\}\}/, "$1")
-    if(isExpression){
-      return temp
-    }
-    return `'${temp}'`
-  }
-
-  _setFrames (frameId, frameUrl) {
-    if (frameId && frameId !== 0) {
-      this._frameId = frameId
-      this._frame = `frame_${frameId}`
-      this._allFrames[frameId] = frameUrl
-    } else {
-      this._frameId = 0
-      this._frame = 'page'
-    }
-  }
-
-  handleVariable(block, name, value){
-    value = this.format(value)
-    block.addLine({value: `let ${name} = ${value}`})
-  }
-
-  _handleSetLocalStorage(block) {
-    var storage = JSON.parse(this._options.localStorage)
-    if(Object.keys(storage).length > 0){
-      for (var key in storage) {
-        var keyValue = storage[key]
-        block.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
-      }
-    }
-  }
-
-  _handleAddWait(block, period) {
-    block.addLine({ value: `cy.wait(${period});`})
-  }
-
-  _handleClickText(block, id, tagName, innerText) {
-    innerText = this.format(innerText)
-    if(id){
-      block.addLine({ value: `cy.get('#${id}').click()`})
-    } else {
-      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
-    }
-  }
-
-  _handleWaitFor(block, id, selector, tagName, innerText) {
-    innerText = this.format(innerText)
-    if(id){
-      block.addLine({ value: `cy.get('#${id}').should('be.visible')`})
-    } else if(selector) {
-      block.addLine({ value: `cy.get('${selector}').should('be.visible')` })
-    } else {
-      block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
-    }
-  }
-
-  _handleKeyDown (selector, value) {
-    value = this.format(value);
-    const block = new Block(this._frameId, 2)
-    block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: ${this._options.typingDelay}})` })
-    return block
-  }
-
-  _handleKeyPress(block, selector, value) {
-    block.addLine({value: `cy.get('${selector}').type('${value}', {delay: ${this._options.typingDelay}})`})
-  }
-
-  _handleClick (block, selector) {
-    block.addLine({ value: `cy.get("${selector}").click()`})
-  }
-
-  _handleChange (block, selector, value) {
-    block.addLine({ value: `cy.get('${selector}').select('${value}')` })
-  }
-
-  _handleGoto (block, href) {
-    href = this.format(href)
-    block.addLine({ value: `cy.visit(${href})` })
-  }
-
-  _handleViewport (block, width, height) {
-    block.addLine({ value: `cy.viewport(${width}, ${height})` })
-  }
-
 }
