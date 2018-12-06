@@ -84,9 +84,27 @@ export class CodeGeneratorPuppeteer {
     block.addLine({value: `}`})
     block.addLine({value: ''})
 
-    block.addLine({value: `let getString = function(){`})
+    block.addLine({value: `const getString = function(){`})
     block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
     block.addLine({value: `}`})
+
+    var storage = JSON.parse(this._options.localStorage)
+    if(Object.keys(storage).length > 0){
+      block.addLine({value: ``})
+      block.addLine({value: `const setLocalStorage = async function(){`})
+      block.addLine({ value: `  await page.evaluate(() => {`})
+      for (var key in storage) {
+        var keyValue = storage[key]
+        if(typeof(keyValue) === "object"){
+            keyValue = JSON.stringify(keyValue);
+            block.addLine({ value: `    localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+        } else {
+            block.addLine({ value: `    localStorage.setItem("${key}", "${keyValue}")`})
+        }
+      }
+      block.addLine({ value: `  })`})
+      block.addLine({ value: `})`})
+    }
   }
 
   addSetup(block){
@@ -185,15 +203,10 @@ export class CodeGeneratorPuppeteer {
           break
 
         case 'navigation*':
-          this._handleWaitForNavigation(block)
           break
 
         case 'wait*':
           this._handleAddWait(block, value)
-          break
-
-        case 'set-local-storage*':
-          this._handleSetLocalStorage(block)
           break
 
         case 'variable*':
@@ -245,7 +258,12 @@ export class CodeGeneratorPuppeteer {
       block.addLine({ value: `await page.evaluate(() => {`})
       for (var key in storage) {
         var keyValue = storage[key]
-        block.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
+        if(typeof(keyValue) === "object"){
+            keyValue = JSON.stringify(keyValue);
+            block.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}"))`})
+        } else {
+            block.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
+        }
       }
       block.addLine({ value: `})`})
     }

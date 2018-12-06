@@ -88,7 +88,6 @@ class RecordingController {
     this.cleanUp(() => {
       this._badgeState = 'rec'
       this.injectScript()
-
       this._boundedMessageHandler = this.handleMessage.bind(this)
       this._boundedNavigationHandler = this.handleNavigation.bind(this)
       this._boundedWaitHandler = this.handleWait.bind(this)
@@ -104,15 +103,17 @@ class RecordingController {
   }
 
   stop () {
-    this._badgeState = this._recording.length > 0 ? '1' : ''
+      this.handledViewport = false;
+      this.handledUrl = false;
+      this._badgeState = this._recording.length > 0 ? '1' : ''
 
-    chrome.runtime.onMessage.removeListener(this._boundedMessageHandler)
-    chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
-    chrome.webNavigation.onBeforeNavigate.removeListener(this._boundedWaitHandler)
+      chrome.runtime.onMessage.removeListener(this._boundedMessageHandler)
+      chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
+      chrome.webNavigation.onBeforeNavigate.removeListener(this._boundedWaitHandler)
 
-    chrome.browserAction.setIcon({ path: './images/icon-black.png' })
-    chrome.browserAction.setBadgeText({text: this._badgeState})
-    chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
+      chrome.browserAction.setIcon({ path: './images/icon-black.png' })
+      chrome.browserAction.setBadgeText({text: this._badgeState})
+      chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
   }
 
   pause () {
@@ -128,23 +129,26 @@ class RecordingController {
   }
 
   cleanUp (cb) {
-    this._recording = []
-    chrome.browserAction.setBadgeText({ text: '' })
-    chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
-    if (cb) cb()
+      this.handledViewport = false;
+      this.handledUrl = false;
+      this._recording = []
+      chrome.browserAction.setBadgeText({ text: '' })
+      chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
+      if (cb) cb()
   }
 
   recordCurrentUrl (href) {
-    this.handleMessage({ id: uuid(), action: messageActions.GOTO, value: href })
-    this.handleMessage({ id: uuid(), action: messageActions.SET_LOCAL_STORAGE })
+      this.handledUrl = true;
+      this.handleMessage({ id: uuid(), action: messageActions.GOTO, value: href })
   }
 
   recordCurrentViewportSize (value) {
-    this.handleMessage({ id: uuid(), value, action: messageActions.VIEWPORT })
+      this.handledViewport = true;
+      this.handleMessage({ id: uuid(), value, action: messageActions.VIEWPORT })
   }
 
   recordNavigation () {
-    this.handleMessage({ id: uuid(), action: messageActions.NAVIGATION })
+      this.handleMessage({ id: uuid(), action: messageActions.NAVIGATION })
   }
 
   handleMessage (msg, sender) {
@@ -237,15 +241,18 @@ class RecordingController {
   handleControlMessage (msg, sender) {
     if (msg.control === 'update-recording') return // Ignore this message since this message is only sent from us
     if (msg.control === 'event-recorder-started') chrome.browserAction.setBadgeText({ text: this._badgeState })
-    if (msg.control === 'get-viewport-size') this.recordCurrentViewportSize(msg.value)
-    if (msg.control === 'get-current-url') this.recordCurrentUrl(msg.value)
+    if (msg.control === 'get-viewport-size' && !this.handledViewport) this.recordCurrentViewportSize(msg.value)
+    if (msg.control === 'get-current-url' && !this.handledUrl) this.recordCurrentUrl(msg.value)
   }
 
+
   handleNavigation ({ frameId }) {
-    this.injectScript()
-    if (frameId === 0) {
-      this.recordNavigation()
-    }
+      this.injectScript()
+      if (frameId === 0) {
+          this.recordNavigation()
+      }
+      this._badgeState = 'rec'
+      chrome.browserAction.setBadgeText({text: this._badgeState})
   }
 
   handleWait () {

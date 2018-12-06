@@ -11,7 +11,6 @@ export default {
   CLICK_TEXT: 'click-text*',
   CLICK_ON: 'click-on*',
   TYPE_TEXT: 'type-text*',
-  SET_LOCAL_STORAGE: 'set-local-storage*',
   STOP: 'stop*',
   VARIABLE: 'variable*'
 }

@@ -78,7 +78,7 @@ class BaseHandler {
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { key, target } = events[current]
+        let { key, keyCode, target } = events[current]
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else if (keyCode == 13) {
@@ -162,18 +162,6 @@ class WaitHandler extends BaseHandler {
     }
 }
 
-class SetLocalStorageHandler extends BaseHandler {
-    handle(block, events, current){
-        const storage = JSON.parse(this.options.localStorage)
-        if(Object.keys(storage).length > 0){
-          for (let key in storage) {
-            let keyValue = storage[key]
-            block.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
-          }
-        }
-    }
-}
-
 class GotoHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
@@ -204,7 +192,6 @@ export class CodeGeneratorCypress {
     this.handlers['mousedown'] = new MouseDownHandler(this.options);
     this.handlers['change'] = new ChangeHandler(this.options);
     this.handlers['wait*'] = new WaitHandler(this.options);
-    this.handlers['set-local-storage*'] = new SetLocalStorageHandler(this.options);
     this.handlers['goto*'] = new GotoHandler(this.options);
     this.handlers['variable*'] = new VariableHandler(this.options);
   }
@@ -258,6 +245,21 @@ export class CodeGeneratorCypress {
     block.addLine({value: `let getString = function(){`})
     block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
     block.addLine({value: `}`})
+    const storage = JSON.parse(this.options.localStorage)
+    if(Object.keys(storage).length > 0){
+        block.addLine({value: ``})
+        block.addLine({value: `let setLocalStorage = function(){`})
+        for (let key in storage) {
+            let keyValue = storage[key]
+            if(typeof(keyValue) === "object"){
+                keyValue = JSON.stringify(keyValue);
+                block.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+            } else {
+                block.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
+            }
+        }
+        block.addLine({value: `}`})
+    }
   }
 
   addSetup(block){

@@ -13,13 +13,12 @@ class EventRecorder {
     });
     const events = Object.values(eventsToRecord)
     if (!window.eventRecorderInitialized) {
-      const boundedRecordEvent = this.recordEvent.bind(this)
-      events.forEach(type => {
-        window.addEventListener(type, boundedRecordEvent, true)
-      })
-      window.eventRecorderInitialized = true
+        const boundedRecordEvent = this.recordEvent.bind(this)
+        events.forEach(type => {
+            window.addEventListener(type, boundedRecordEvent, true)
+        })
+        window.eventRecorderInitialized = true
     }
-
     this.sendMessage({ control: 'event-recorder-started' })
     this.sendMessage({ control: 'get-current-url', value: window.location.href })
     this.sendMessage({ control: 'get-viewport-size', value: { width: window.innerWidth, height: window.innerHeight } })
