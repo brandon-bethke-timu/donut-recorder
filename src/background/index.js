@@ -25,6 +25,7 @@ class RecordingController {
         if (msg.action === 'insert-event') this.insertEvent(msg)
         if (msg.action === 'remove-event') this.removeEvent(msg)
         if (msg.action === 'update-event') this.updateEvent(msg)
+        if (msg.action === 'new-event') this.newEvent(msg)
         if (msg.action === 'get-recording') chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
         if (msg.action === 'variable*') this.variable(msg)
       })
@@ -70,6 +71,14 @@ class RecordingController {
     }
     this._recording[itemIndex] = msg.event;
     chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
+  }
+
+  newEvent(msg){
+      this._recording.push(msg.event);
+      if(msg.event.action === "goto*"){
+          chrome.tabs.update(undefined, {url: msg.event.value})
+      }
+      chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
   }
 
   wait(msg){
@@ -240,7 +249,6 @@ class RecordingController {
 
   handleControlMessage (msg, sender) {
     if (msg.control === 'update-recording') return // Ignore this message since this message is only sent from us
-    if (msg.control === 'event-recorder-started') chrome.browserAction.setBadgeText({ text: this._badgeState })
     if (msg.control === 'get-viewport-size' && !this.handledViewport) this.recordCurrentViewportSize(msg.value)
     if (msg.control === 'get-current-url' && !this.handledUrl) this.recordCurrentUrl(msg.value)
   }

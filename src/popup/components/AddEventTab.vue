@@ -33,11 +33,12 @@
             </div>
         </div>
         <div v-if="event.action === 'goto*'" class="event-property-table">
+            <div><button v-on:click="saveNew(event)">Done</button></div>
             <div class="event-property-names">
                 <div><label>URL:</label></div>
             </div>
             <div>
-                <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change=""></div>
             </div>
         </div>
         <div v-if="event.action === 'viewport*'" class="event-property-table">
@@ -88,7 +89,7 @@
     import uuid from '../../background/uuid'
 
     export default {
-        name: 'EditEventTab',
+        name: 'AddEventTab',
         props: {
             event: { type: Object, default: () => {} }
         },
@@ -101,15 +102,15 @@
             this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
         },
         methods: {
+            saveNew(event){
+                this.sendMessage({action: "new-event", event})
+            },
             sendMessage(msg){
                 try{
                   this.bus.postMessage(msg)
                 }catch(error){
                   chrome.extension.getBackgroundPage().console.log("There was an issue sending the message", error)
                 }
-            },
-            save(event){
-                this.sendMessage({action: "update-event", event})
             }
         }
     }

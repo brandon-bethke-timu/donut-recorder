@@ -19,7 +19,6 @@ class EventRecorder {
         })
         window.eventRecorderInitialized = true
     }
-    this.sendMessage({ control: 'event-recorder-started' })
     this.sendMessage({ control: 'get-current-url', value: window.location.href })
     this.sendMessage({ control: 'get-viewport-size', value: { width: window.innerWidth, height: window.innerHeight } })
   }

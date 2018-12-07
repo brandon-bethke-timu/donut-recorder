@@ -35,8 +35,10 @@
         <img src="/images/icon-wait.svg" @click="wait" v-b-tooltip.hover title="Wait" alt="Add Wait">
         <img src="/images/icon-wait-for.svg" @click="waitFor" v-b-tooltip.hover title="Wait For" alt="Add Wait For">
         <img src="/images/icon-text-click.svg" @click="textClick" v-b-tooltip.hover title="Text Click" alt="Add Text Click">
+        <img src="/images/icon-visit.svg" @click="visitUrl" v-b-tooltip.hover title="Visit URL" alt="Visit URL">
       </div>
       <EditEventTab :event="currentEvent" v-show="showDetails"/>
+      <AddEventTab :event="newEvent" v-show="showNewEvent"/>
     </div>
   </div>
 </template>
@@ -45,10 +47,11 @@
   import { global } from '../../code-generator/global-settings'
   import uuid from '../../background/uuid'
   import EditEventTab from "./EditEventTab.vue";
+  import AddEventTab from "./AddEventTab.vue";
 
   export default {
     name: 'RecordingTab',
-    components: { EditEventTab },
+    components: { EditEventTab, AddEventTab },
     props: {
       isRecording: { type: Boolean, default: false },
       liveEvents: { type: Array, default: () => [] }
@@ -56,11 +59,13 @@
     watch: {
       isRecording: function(recording){
         this.showDetails = recording && this.currentEvent && liveEvents.length > 0 ? true : false
+        this.showNewEvent = recording && this.newEvent && liveEvents.length > 0 ? true : false
       }
     },
     data() {
       return {
         currentEvent: undefined,
+        newEvent: undefined,
         options: { global },
         activeIndex: undefined
       }
@@ -123,12 +128,22 @@
           this.currentEvent = undefined;
           this.showDetails = false;
         }
+        if(event === this.newEvent){
+          this.newEvent = undefined;
+          this.showNewEvent = false;
+        }
         this.liveEvents.splice(index, 1)
         this.sendMessage({ action: 'remove-event', event })
       },
       editItem(event, index){
         this.currentEvent = event;
         this.showDetails = true
+        this.showNewEvent = false
+      },
+      visitUrl(){
+        this.newEvent = {id: uuid(), action: "goto*", value: ""}
+        this.showNewEvent = true
+        this.showDetails = false
       },
       sendMessage(msg){
         try{

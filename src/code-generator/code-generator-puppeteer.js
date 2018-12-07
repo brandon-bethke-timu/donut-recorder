@@ -1,5 +1,6 @@
 import messageActions from './message-actions'
 import Block from './block'
+import {BaseHandler} from './base-handler'
 import {global} from './global-settings'
 
 export const options = [
@@ -10,20 +11,133 @@ export const options = [
 
 const newLine = '\n';
 
+class KeyDownHandler extends BaseHandler {
+    handle(block, events, current){
+        let { key, keyCode, target } = events[current]
+        const selector = target.selector;
+        if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
+        } else {
+            block.addLine({value: `await type('${selector}', '${key}', true)`})
+        }
+    }
+}
+
+class WaitForSelectorHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const selector = target.selector;
+        block.addLine({ value: `await page.waitFor('${selector}', {visible: true})` })
+    }
+}
+
+class WaitForTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const tagName = target.tagName;
+        let innerText = target.innerText;
+        const isExpression = this.isExpression(innerText)
+        innerText = this.format(innerText)
+        if(isExpression){
+            block.addLine({ value: `await page.waitFor("//${tagName}[normalize-space() = \" + ${innerText} + \"]", {visible: true})`})
+        } else {
+            block.addLine({ value: `await page.waitFor("//${tagName}[normalize-space() = ${innerText}]", {visible: true})`})
+        }
+    }
+}
+
+class ClickTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const tagName = target.tagName;
+        let innerText = target.innerText;
+        const isExpression = this.isExpression(innerText)
+        innerText = this.format(innerText)
+        if(isExpression){
+            block.addLine({ value: `await click("//${tagName}[normalize-space() = \" + ${innerText} + \"]")`})
+        } else {
+            block.addLine({ value: `await click("//${tagName}[normalize-space() = ${innerText}]")`})
+        }
+    }
+}
+
+class TypeTextHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value, target} = events[current]
+        const selector = target.selector;
+        value = this.format(value);
+        block.addLine({ value: `await type('${selector}', ${value})` })
+    }
+}
+
+class MouseDownHandler extends BaseHandler {
+    handle(block, events, current){
+        let { target } = events[current]
+        const selector = target.selector;
+        block.addLine({ value: `await click('${selector}')`})
+    }
+}
+
+class ChangeHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value, target} = events[current]
+        const selector = target.selector;
+        if(target.tagName === "SELECT"){
+            block.addLine({ value: `await page.select('${selector}', '${value}')` })
+        }
+    }
+}
+
+class WaitHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value } = events[current]
+        block.addLine({ value: `await page.waitFor(${value});`})
+    }
+}
+
+class GotoHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value } = events[current]
+        value = this.format(value)
+        block.addLine({ value: `await page.goto(${value})` })
+    }
+}
+
+class ViewportHandler extends BaseHandler {
+    handle(block, events, current){
+        let { value } = events[current]
+        block.addLine({ value: `await $page.setViewport({ width: ${value.width}, height: ${value.height} })` })
+    }
+}
+
+class VariableHandler extends BaseHandler {
+    handle(block, events, current){
+        let { name, value } = events[current]
+        value = this.format(value)
+        block.addLine({value: `let ${name} = ${value}`})
+    }
+}
+
 export class CodeGeneratorPuppeteer {
   constructor (options) {
     this._options = Object.assign(global, options)
-    this._blocks = []
-    this._frame = 'page'
-    this._frameId = 0
-    this._allFrames = {}
-    this._navigationPromiseSet = false
     this.language = "js"
+
+    this.handlers = []
+    this.handlers['keydown'] = new KeyDownHandler(this.options);
+    this.handlers['wait-for-selector*'] = new WaitForSelectorHandler(this.options);
+    this.handlers['wait-for-text*'] = new WaitForTextHandler(this.options);
+    this.handlers['click-text*'] = new ClickTextHandler(this.options);
+    this.handlers['type-text*'] = new TypeTextHandler(this.options);
+    this.handlers['mousedown'] = new MouseDownHandler(this.options);
+    this.handlers['change'] = new ChangeHandler(this.options);
+    this.handlers['wait*'] = new WaitHandler(this.options);
+    this.handlers['goto*'] = new GotoHandler(this.options);
+    this.handlers['variable*'] = new VariableHandler(this.options);
+    this.handlers['viewport*'] = new ViewportHandler(this.options);
   }
 
   generate (events) {
     let block = new Block(this._frameId, 0)
-
     this.addImports(block)
     block.addLine({value: ''})
     this.addGlobalVariables(block)
@@ -37,6 +151,7 @@ export class CodeGeneratorPuppeteer {
     }
     this.addSetup(block)
     this.addEvents(block, events)
+    block.setIndent(0)
     if(!this._options.mocha){
         block.addLine({value: `browser.close()`})
     }
@@ -54,7 +169,6 @@ export class CodeGeneratorPuppeteer {
     for (let line of lines) {
       script = script + line.value + newLine
     }
-
     return script;
   }
 
@@ -118,207 +232,13 @@ export class CodeGeneratorPuppeteer {
     }
   }
 
-  addBlock(block){
-    this._blocks.push(block)
-  }
-
   addEvents (block, events) {
-    for (let i = 0; i < events.length; i++) {
-      const { name, value, action, frameId, frameUrl, target, keyCode, altKey, ctrlKey, shiftKey, key } = events[i]
-      // we need to keep a handle on what frames events originate from
-      this._setFrames(frameId, frameUrl)
-
-      const getPreviousEvent = function(index){
-        for(let i = index - 1; i >=0 ; i--) {
-          let previousEvent = events[i]
-          if(previousEvent.action === "mousemove"){
-            continue;
+      for (let i = 0; i < events.length; i++) {
+          let {action} = events[i]
+          const handler = this.handlers[action];
+          if(handler){
+              handler.handle(block, events, i);
           }
-          return previousEvent;
-        }
-        return undefined;
       }
-
-      const getNextEvent = function(index){
-        for(let i = index + 1; i < events.length; i++) {
-          let nextEvent = events[i]
-          if(nextEvent.action === "mousemove"){
-            continue;
-          }
-          return nextEvent;
-        }
-        return undefined;
-      }
-      const previousEvent = getPreviousEvent(i);
-      const nextEvent = getNextEvent(i);
-
-      switch (action) {
-        case 'mousemove':
-          break
-
-        case 'keydown':
-
-          if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
-          } else {
-            this._handleKeyPress(block, target.selector, key)
-          }
-          break
-
-        case 'wait-for-selector*':
-          this._handleWaitFor(block, undefined, target.selector, undefined, undefined)
-          break;
-
-        case 'wait-for-text*':
-          this._handleWaitFor(block, undefined, undefined, target.tagName, target.innerText)
-          break;
-
-        case 'click-text*':
-          this._handleClickText(block, undefined, target.tagName, target.innerText)
-          break;
-
-        case 'type-text*':
-          this._handleKeyDown(block, target.selector, value, keyCode)
-          break;
-
-        case 'mousedown':
-          if(nextEvent && nextEvent.action === 'navigation*' && this._options.waitForNavigation && !this._navigationPromiseSet) {
-            block.addLine({value: `const navigationPromise = page.waitForNavigation()`})
-            this._navigationPromiseSet = true
-          }
-          this._handleClick(block, target.selector)
-          break
-
-        case 'change':
-          if (target.tagName === 'SELECT') {
-            this._handleChange(block, target.selector, value)
-          }
-          break
-
-        case 'goto*':
-          this._handleGoto(block, value, frameId)
-          break
-
-        case 'viewport*':
-          this._handleViewport(block, value.width, value.height)
-          break
-
-        case 'navigation*':
-          break
-
-        case 'wait*':
-          this._handleAddWait(block, value)
-          break
-
-        case 'variable*':
-          this.handleVariable(block, name, value)
-          break
-      }
-    }
   }
-
-  format(expression){
-    if(!expression) return expression;
-
-    if(expression.match(/^['].*[']$/)){
-      return expression
-    }
-
-    if(expression.match(/^["].*["]$/)){
-      return expression
-    }
-    let isExpression = false
-    isExpression = isExpression || expression.match(/\{\{([A-Za-z0-9]*)\}\}/)
-    isExpression = isExpression || expression.match(/getString\(\)/)
-    let temp = expression.replace(/\{\{([A-Za-z0-9]*)\}\}/, "$1")
-    if(isExpression){
-      return temp
-    }
-    return `"${temp}"`
-  }
-
-  _setFrames (frameId, frameUrl) {
-    if (frameId && frameId !== 0) {
-      this._frameId = frameId
-      this._frame = `frame_${frameId}`
-      this._allFrames[frameId] = frameUrl
-    } else {
-      this._frameId = 0
-      this._frame = 'page'
-    }
-  }
-
-  handleVariable(block, name, value){
-    value = this.format(value)
-    block.addLine({value: `let ${name} = ${value}`})
-  }
-
-  _handleSetLocalStorage(block) {
-    var storage = JSON.parse(this._options.localStorage)
-    if(Object.keys(storage).length > 0){
-      block.addLine({ value: `await page.evaluate(() => {`})
-      for (var key in storage) {
-        var keyValue = storage[key]
-        if(typeof(keyValue) === "object"){
-            keyValue = JSON.stringify(keyValue);
-            block.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}"))`})
-        } else {
-            block.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
-        }
-      }
-      block.addLine({ value: `})`})
-    }
-  }
-
-  _handleAddWait(block, period) {
-    block.addLine({ value: `await page.waitFor(${period});`})
-  }
-
-  _handleClickText(block, id, tagName, innerText) {
-    innerText = this.format(innerText)
-    if(id){
-      block.addLine({ value: `await click('#${id}')`})
-    } else {
-      block.addLine({ value: `await click('//${tagName}[normalize-space() = ${innerText}]')`})
-    }
-  }
-
-  _handleWaitFor(block, id, selector, tagName, innerText) {
-    innerText = this.format(innerText)
-    if(id){
-      block.addLine({ value: `await ${this._frame}.waitFor('#${id}', {visible: true})`})
-    } else if(selector) {
-      block.addLine({ value: `await ${this._frame}.waitFor('${selector}', {visible: true})` })
-    } else {
-      block.addLine({ value: `await ${this._frame}.waitFor('//${tagName}[normalize-space() = ${innerText}]', {visible: true})`})
-    }
-  }
-
-  _handleEnter(block, selector) {
-    block.addLine({value: `await page.keyboard.press('Enter')`})
-  }
-
-  _handleKeyDown (block, selector, value) {
-    value = this.format(value);
-    block.addLine({ value: `await type('${selector}', ${value})` })
-  }
-
-  _handleKeyPress(block, selector, value) {
-    block.addLine({value: `await type('${selector}', '${value}', true)`})
-  }
-
-  _handleClick (block, selector) {
-    block.addLine({ value: `await click('${selector}')`})
-  }
-  _handleChange (block, selector, value) {
-    block.addLine({ value: `await ${this._frame}.select('${selector}', '${value}')` })
-  }
-  _handleGoto (block, href) {
-    href = this.format(href)
-    block.addLine({ value: `await ${this._frame}.goto(${href})` })
-  }
-
-  _handleViewport (block, width, height) {
-    block.addLine({ value: `await ${this._frame}.setViewport({ width: ${width}, height: ${height} })` })
-  }
-
 }
