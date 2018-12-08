@@ -1,6 +1,11 @@
 import messageActions from './message-actions'
-import Block from './block'
-import {BaseHandler} from './base-handler'
+import Block from './block/block'
+import AfterBlock from './block/after-block'
+import ItBlock from './block/it-block'
+import AsyncBlock from './block/async-block'
+import DescribeBlock from './block/describe-block'
+import BaseHandler from './base-handler'
+import GetStringBlock from './block/get-string-block'
 import {global} from './global-settings'
 
 export const options = [
@@ -8,8 +13,6 @@ export const options = [
     { type: "checkbox", name: "headless", title: "headless", value: false, id: "headless"},
     { type: "textbox", name: "typingDelay", title: "The delay between keystrokes", value: 100, id: "typingDelay"}
 ]
-
-const newLine = '\n';
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
@@ -105,7 +108,7 @@ class GotoHandler extends BaseHandler {
 class ViewportHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
-        block.addLine({ value: `await $page.setViewport({ width: ${value.width}, height: ${value.height} })` })
+        block.addLine({ value: `await page.setViewport({ width: ${value.width}, height: ${value.height} })` })
     }
 }
 
@@ -137,39 +140,37 @@ export class CodeGeneratorPuppeteer {
   }
 
   generate (events) {
-    let block = new Block(this._frameId, 0)
+    let block = new Block()
     this.addImports(block)
-    block.addLine({value: ''})
-    this.addGlobalVariables(block)
-    block.addLine({value: ''})
-    this.addGlobalMethods(block)
-    block.addLine({value: ''})
-    if(this._options.mocha){
-      block.addLine({value: `describe("", async function(){`})
-      block.addLine({value: `  it("", async function(){`})
-      block.setIndent(2)
-    }
-    this.addSetup(block)
-    this.addEvents(block, events)
-    block.setIndent(0)
+    let body = block;
+    block.addLine({value: ``})
     if(!this._options.mocha){
-        block.addLine({value: `browser.close()`})
+        body = new AsyncBlock();
+        block.addBlock(body)
     }
-    if(this._options.mocha){
-        block.setIndent(0)
-        block.addLine({value: `  })`})
-        block.addLine({value: `  after(async function(){`})
-        block.addLine({value: `    browser.close()`})
-        block.addLine({value: `  })`})
-        block.addLine({value: `})`})
-    }
+    this.addGlobalVariables(body)
+    body.addLine({value: ``})
+    this.addGlobalMethods(body)
+    body.addLine({value: ``})
 
-    const lines = block.getLines()
-    let script = ''
-    for (let line of lines) {
-      script = script + line.value + newLine
+    if(this._options.mocha){
+        let describe = new DescribeBlock({indent: 0})
+        body.addBlock(describe)
+        let it = new ItBlock({indent: 1})
+        describe.addLine({value: ``})
+        describe.addBlock(it)
+        this.addSetup(it)
+        this.addEvents(it, events)
+        let after = new AfterBlock({indent: 1});
+        after.addLine({value: `browser.close()`})
+        describe.addLine({value: ``})
+        describe.addBlock(after)
+    } else {
+        this.addSetup(body)
+        this.addEvents(body, events)
+        body.addLine({value: `browser.close()`})
     }
-    return script;
+    return block.build()
   }
 
   addImports(block){
@@ -198,9 +199,8 @@ export class CodeGeneratorPuppeteer {
     block.addLine({value: `}`})
     block.addLine({value: ''})
 
-    block.addLine({value: `const getString = function(){`})
-    block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
-    block.addLine({value: `}`})
+    let getStringBlock = new GetStringBlock({indent: block.getIndent()});
+    block.addBlock(getStringBlock)
 
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){

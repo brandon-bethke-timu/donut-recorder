@@ -1,4 +1,4 @@
-export class BaseHandler {
+export default class BaseHandler {
     constructor(options){
         this.options = options
     }

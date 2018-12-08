@@ -1,6 +1,8 @@
 import messageActions from './message-actions'
-import Block from './block'
-import {BaseHandler} from './base-handler'
+import Block from './block/block'
+import DescribeBlock from './block/describe-block'
+import GetStringBlock from './block/get-string-block'
+import BaseHandler from './base-handler'
 import {global} from './global-settings'
 //import {details as eventToString} from 'key-event-to-string'
 
@@ -8,8 +10,6 @@ export const options = [
     { type: "checkbox", name: "ignoreUncaughtExceptions", title: "Ignore uncaught exceptions", value: false, id: "ignoreUncaughtExceptions"},
     { type: "textbox", name: "typingDelay", title: "The delay between keystrokes", value: 100, id: "typingDelay"}
 ]
-
-const newLine = '\n';
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
@@ -132,31 +132,21 @@ export class CodeGeneratorCypress {
   }
 
   generate (events) {
-    let block = new Block(this._frameId, 0)
+    let block = new Block()
 
     this.addImports(block)
-    block.addLine({value: ''})
+    //block.addLine({value: ''})
     this.addGlobalVariables(block)
-    block.addLine({value: ''})
+    //block.addLine({value: ''})
     this.addGlobalMethods(block)
     block.addLine({value: ''})
-    block.addLine({value: `describe("", async function(){`})
-    block.addLine({value: `  it("", async function(){`})
-    block.setIndent(2)
-    this.addSetup(block)
-    this.addEvents(block, events)
-    block.setIndent(0)
-    block.addLine({value: `  })`})
-    block.addLine({value: `})`})
+    let describe = new DescribeBlock({indent: 0})
+    this.addSetup(describe)
+    this.addEvents(describe, events)
+    block.addBlock(describe)
     this.addUncaughtException(block)
 
-    const lines = block.getLines()
-    let script = ''
-    for (let line of lines) {
-      script = script + line.value + newLine
-    }
-
-    return script;
+    return block.build()
   }
 
   addUncaughtException(block){
@@ -177,9 +167,9 @@ export class CodeGeneratorCypress {
   }
 
   addGlobalMethods(block){
-    block.addLine({value: `let getString = function(){`})
-    block.addLine({value: `  return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10)`})
-    block.addLine({value: `}`})
+
+    let getStringBlock = new GetStringBlock({indent: block.getIndent()});
+    block.addBlock(getStringBlock)
     const storage = JSON.parse(this.options.localStorage)
     if(Object.keys(storage).length > 0){
         block.addLine({value: ``})
