@@ -6,6 +6,8 @@ import AsyncBlock from './block/async-block'
 import DescribeBlock from './block/describe-block'
 import BaseHandler from './base-handler'
 import GetStringBlock from './block/get-string-block'
+import MethodBlock from './block/method-block'
+import IfBlock from "./block/if-block"
 import {global} from './global-settings'
 
 export const options = [
@@ -183,20 +185,20 @@ export class CodeGeneratorPuppeteer {
   }
 
   addGlobalMethods(block){
-    block.addLine({value: `const click = async function(path){`})
-    block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
-    block.addLine({value: `  await e.click()`})
-    block.addLine({value: `}`})
+    let method = new MethodBlock({indent: block.getIndent(), name: "click"})
+    method.addLine({value: `let e = await page.waitFor(path, {visible: true})`})
+    method.addLine({value: `await e.click()`})
+    block.addBlock(method)
     block.addLine({value: ''})
 
-    block.addLine({value: `const type = async function(path, message, press){`})
-    block.addLine({value: `  let e = await page.waitFor(path, {visible: true})`})
-    block.addLine({value: `  if(press){`})
-    block.addLine({value: `    await e.press(message)`})
-    block.addLine({value: `  } else {`})
-    block.addLine({value: `    await e.type(message, {delay: ${this._options.typingDelay}})`})
-    block.addLine({value: `  }`})
-    block.addLine({value: `}`})
+    method = new MethodBlock({indent: block.getIndent(), name: "type", params: ["path", "message", "press"]})
+    method.addLine({value: `let e = await page.waitFor(path, {visible: true})`})
+    let ifBlock = new IfBlock({indent: method.getIndent(), condition: "press"})
+    ifBlock.addLine({value: `await e.press(message)`})
+    let elseBlock = ifBlock.else({indent: method.getIndent()});
+    elseBlock.addLine({value: `await e.type(message, {delay: ${this._options.typingDelay}})`})
+    method.addBlock(ifBlock)
+    block.addBlock(method)
     block.addLine({value: ''})
 
     let getStringBlock = new GetStringBlock({indent: block.getIndent()});
@@ -205,19 +207,19 @@ export class CodeGeneratorPuppeteer {
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
       block.addLine({value: ``})
-      block.addLine({value: `const setLocalStorage = async function(){`})
-      block.addLine({ value: `  await page.evaluate(() => {`})
+      let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage"})
+      method.addLine({ value: `await page.evaluate(() => {`})
       for (var key in storage) {
         var keyValue = storage[key]
         if(typeof(keyValue) === "object"){
             keyValue = JSON.stringify(keyValue);
-            block.addLine({ value: `    localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+            method.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
         } else {
-            block.addLine({ value: `    localStorage.setItem("${key}", "${keyValue}")`})
+            method.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
         }
       }
-      block.addLine({ value: `  })`})
-      block.addLine({ value: `})`})
+      method.addLine({ value: `})`})
+      block.addBlock(method)
     }
   }
 

@@ -1,5 +1,5 @@
-import Block from "./block"
-export default class AfterBlock extends Block {
+import ScopedBlock from './scoped-block'
+export default class AfterBlock extends ScopedBlock {
     constructor({indent, async} = {}){
         super({indent})
         async = async === undefined ? true : async
@@ -10,11 +10,5 @@ export default class AfterBlock extends Block {
         }
         this._lines.push(this.indent({value: `})`}))
         this.setIndent(this._indent + 1)
-    }
-    addLine (line) {
-        this._lines.splice(this._lines.length - 1, 0, this.indent(line))
-    }
-    addBlock(block){
-        this._lines.splice(this._lines.length - 1, 0, block)
     }
 }

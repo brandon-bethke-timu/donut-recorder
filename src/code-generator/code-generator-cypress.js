@@ -3,6 +3,7 @@ import Block from './block/block'
 import DescribeBlock from './block/describe-block'
 import GetStringBlock from './block/get-string-block'
 import BaseHandler from './base-handler'
+import MethodBlock from './block/method-block'
 import {global} from './global-settings'
 //import {details as eventToString} from 'key-event-to-string'
 
@@ -173,17 +174,17 @@ export class CodeGeneratorCypress {
     const storage = JSON.parse(this.options.localStorage)
     if(Object.keys(storage).length > 0){
         block.addLine({value: ``})
-        block.addLine({value: `let setLocalStorage = function(){`})
+        let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage", async: false})
         for (let key in storage) {
             let keyValue = storage[key]
             if(typeof(keyValue) === "object"){
                 keyValue = JSON.stringify(keyValue);
-                block.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+                method.addLine({ value: `localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
             } else {
-                block.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
+                method.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
             }
         }
-        block.addLine({value: `}`})
+        block.addBlock(method)
     }
   }
 
