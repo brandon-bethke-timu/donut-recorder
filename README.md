@@ -67,7 +67,7 @@ See src/code-generators/code-generator-puppeteer.js for an example
    - Import your new generator
    - Add an entry to `generators.types[]`
    - Add an entry to `classes`
-   - Custom options should be exprted from your module and added to the `options` array field in `generators.types`
+   - Custom options should be exported from your module and added to the `options` array field in `generators.types`
 
 
 ## CLI

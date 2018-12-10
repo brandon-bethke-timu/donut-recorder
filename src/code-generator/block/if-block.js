@@ -2,7 +2,6 @@ import ScopedBlock from './scoped-block'
 export default class IfBlock extends ScopedBlock {
     constructor({indent, condition} = {}){
         super({indent})
-        this.else - new ElseBlock();
         this._lines.unshift(this.indent({value: `if(${condition}){`}))
         this._lines.push(this.indent({value: `}`}))
         this.setIndent(this._indent + 1)
