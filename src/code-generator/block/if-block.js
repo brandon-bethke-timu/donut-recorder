@@ -27,9 +27,16 @@ export default class IfBlock extends ScopedBlock {
         this._lines.push(new Line({indent: this.getIndent(), value: `}`}))
         let script = super.build()
         for(let i = 0; i < this._elseif.length; i++){
+            let item = this._elseif[i]
+            if(item.getIndent() === undefined){
+                item.setIndent(this.getIndent())
+            }
             script = script + this._elseif[i].build();
         }
         if(this._else){
+            if(this._else.getIndent() === undefined){
+                this._else.setIndent(this.getIndent())
+            }
             script = script + this._else.build();
         }
         return script;

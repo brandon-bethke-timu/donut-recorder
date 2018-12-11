@@ -8,17 +8,14 @@ export default class Block {
 
   add(item){
       if(typeof(item) === "string"){
-          this._lines.push(new Line({indent: this.getIndent(), value: item}))
+          this._lines.push(new Line({value: item}))
       } else {
-          if(item.getIndent() === undefined){
-              item.setIndent(this.getIndent())
-          }
           this._lines.push(item)
       }
   }
 
-  setIndent(indent){
-      this._indent = indent;
+  setIndent(value){
+      this._indent = value;
   }
 
   getIndent(){
@@ -45,14 +42,11 @@ export default class Block {
       let indentation = this.indentation();
       let total = lines.length;
       for(let i = 0; i < total; i++){
-          let line = lines[i];
-          if(line instanceof Line){
-              script = script + line.build()
-          } else if(line instanceof Block){
-              script = script + line.build()
-          } else {
-              script = script + indentation + line.value + "\n"
+          let item = lines[i];
+          if(item.getIndent() === undefined){
+              item.setIndent(this.getIndent());
           }
+          script = script + item.build()
       }
       return script
   }

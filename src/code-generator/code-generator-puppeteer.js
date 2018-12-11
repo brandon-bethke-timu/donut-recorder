@@ -9,6 +9,7 @@ import GetStringBlock from './block/get-string-block'
 import MethodBlock from './block/method-block'
 import IfBlock from "./block/if-block"
 import Variable from "./block/variable"
+import Line from "./block/line"
 import {global} from './global-settings'
 
 export const options = [
@@ -164,7 +165,7 @@ export class CodeGeneratorPuppeteer {
         describe.add(it)
         this.addSetup(it)
         this.addEvents(it, events)
-        let after = new AfterBlock({indent: 1});
+        let after = new AfterBlock();
         after.add(`browser.close()`)
         describe.add(``)
         describe.add(after)
@@ -186,29 +187,29 @@ export class CodeGeneratorPuppeteer {
   }
 
   addGlobalMethods(block){
-    let method = new MethodBlock({indent: block.getIndent(), name: "click"})
+    let method = new MethodBlock({name: "click"})
     method.add(`let e = await page.waitFor(path, {visible: true})`)
     method.add(`await e.click()`)
     block.add(method)
     block.add('')
 
-    method = new MethodBlock({indent: block.getIndent(), name: "type", params: ["path", "message", "press"]})
+    method = new MethodBlock({name: "type", params: ["path", "message", "press"]})
     method.add(`let e = await page.waitFor(path, {visible: true})`)
-    let ifBlock = new IfBlock({indent: method.getIndent() + 1, condition: "press"})
+    let ifBlock = new IfBlock({condition: "press"})
     ifBlock.add(`await e.press(message)`)
-    let elseBlock = ifBlock.else({indent: method.getIndent()});
+    let elseBlock = ifBlock.else();
     elseBlock.add(`await e.type(message, {delay: ${this._options.typingDelay}})`)
     method.add(ifBlock)
     block.add(method)
     block.add('')
 
-    let getStringBlock = new GetStringBlock({indent: block.getIndent()});
+    let getStringBlock = new GetStringBlock();
     block.add(getStringBlock)
 
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
       block.add(``)
-      let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage"})
+      let method = new MethodBlock({name: "setLocalStorage"})
       method.add(`await page.evaluate(() => {`)
       for (var key in storage) {
         var keyValue = storage[key]

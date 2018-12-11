@@ -1,11 +1,15 @@
 export default class Line {
     constructor({indent, value, terminator, newline} = {}){
-        this.indent = indent ? indent : 0
+        this.indent = indent
         this.terminator = terminator ? terminator : ''
         this.line = value;
         this.newline = newline ? newline : '\n'
     }
 
+    setIndent(value){
+        this.indent = value
+    }
+    
     getIndent(){
         return this.indent
     }

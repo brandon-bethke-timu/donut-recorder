@@ -141,7 +141,7 @@ export class CodeGeneratorCypress {
     //block.add('')
     this.addGlobalMethods(block)
     block.add('')
-    let describe = new DescribeBlock({indent: 0})
+    let describe = new DescribeBlock()
     this.addSetup(describe)
     this.addEvents(describe, events)
     block.add(describe)
@@ -169,12 +169,12 @@ export class CodeGeneratorCypress {
 
   addGlobalMethods(block){
 
-    let getStringBlock = new GetStringBlock({indent: block.getIndent()});
+    let getStringBlock = new GetStringBlock();
     block.add(getStringBlock)
     const storage = JSON.parse(this.options.localStorage)
     if(Object.keys(storage).length > 0){
         block.add(``)
-        let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage", async: false})
+        let method = new MethodBlock({name: "setLocalStorage", async: false})
         for (let key in storage) {
             let keyValue = storage[key]
             if(typeof(keyValue) === "object"){
