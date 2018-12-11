@@ -18,10 +18,10 @@ class KeyDownHandler extends BaseHandler {
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else if (keyCode == 13) {
-            block.addLine({value: `cy.get('${selector}').type('{enter}', {delay: ${this.options.typingDelay}})`})
+            block.add(`cy.get('${selector}').type('{enter}', {delay: ${this.options.typingDelay}})`)
         } else {
             key = this.format(key)
-            block.addLine({value: `cy.get('${selector}').type('${key}', {delay: ${this.options.typingDelay}})`})
+            block.add(`cy.get('${selector}').type('${key}', {delay: ${this.options.typingDelay}})`)
         }
     }
 }
@@ -30,7 +30,7 @@ class WaitForSelectorHandler extends BaseHandler {
     handle(block, events, current){
         let { target } = events[current]
         const selector = target.selector;
-        block.addLine({ value: `cy.get('${selector}').should('be.visible')` })
+        block.add(`cy.get('${selector}').should('be.visible')`)
     }
 }
 
@@ -42,9 +42,9 @@ class WaitForTextHandler extends BaseHandler {
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
         if(isExpression){
-            block.addLine({ value: `cy.get("${tagName}:contains(\" + ${innerText} + \")").should('be.visible')`})
+            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").should('be.visible')`)
         } else {
-            block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").should('be.visible')`})
+            block.add(`cy.get("${tagName}:contains(${innerText})").should('be.visible')`)
         }
     }
 }
@@ -57,9 +57,9 @@ class ClickTextHandler extends BaseHandler {
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
         if(isExpression){
-            block.addLine({ value: `cy.get("${tagName}:contains(\" + ${innerText} + \")").click()`})
+            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").click()`)
         } else {
-            block.addLine({ value: `cy.get("${tagName}:contains(${innerText})").click()`})
+            block.add(`cy.get("${tagName}:contains(${innerText})").click()`)
         }
     }
 }
@@ -69,7 +69,7 @@ class TypeTextHandler extends BaseHandler {
         let { value, target} = events[current]
         const selector = target.selector;
         value = this.format(value);
-        block.addLine({ value: `cy.get('${selector}').type(${value}, {delay: ${this.options.typingDelay}})` })
+        block.add(`cy.get('${selector}').type(${value}, {delay: ${this.options.typingDelay}})`)
     }
 }
 
@@ -77,7 +77,7 @@ class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
         let { target } = events[current]
         const selector = target.selector;
-        block.addLine({ value: `cy.get("${selector}").click()`})
+        block.add(`cy.get("${selector}").click()`)
     }
 }
 
@@ -86,7 +86,7 @@ class ChangeHandler extends BaseHandler {
         let { value, target} = events[current]
         const selector = target.selector;
         if(target.tagName === "SELECT"){
-            block.addLine({ value: `cy.get('${selector}').select('${value}')` })
+            block.add(`cy.get('${selector}').select('${value}')`)
         }
     }
 }
@@ -94,7 +94,7 @@ class ChangeHandler extends BaseHandler {
 class WaitHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
-        block.addLine({ value: `cy.wait(${value});`})
+        block.add(`cy.wait(${value})`)
     }
 }
 
@@ -102,7 +102,7 @@ class GotoHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
         value = this.format(value)
-        block.addLine({ value: `cy.visit(${value})` })
+        block.add(`cy.visit(${value})`)
     }
 }
 
@@ -110,7 +110,7 @@ class VariableHandler extends BaseHandler {
     handle(block, events, current){
         let { name, value } = events[current]
         value = this.format(value)
-        block.addLine({value: `let ${name} = ${value}`})
+        block.add(`let ${name} = ${value}`)
     }
 }
 
@@ -133,18 +133,18 @@ export class CodeGeneratorCypress {
   }
 
   generate (events) {
-    let block = new Block()
+    let block = new Block({indent: 0})
 
     this.addImports(block)
-    //block.addLine({value: ''})
+    //block.add('')
     this.addGlobalVariables(block)
-    //block.addLine({value: ''})
+    //block.add('')
     this.addGlobalMethods(block)
-    block.addLine({value: ''})
+    block.add('')
     let describe = new DescribeBlock({indent: 0})
     this.addSetup(describe)
     this.addEvents(describe, events)
-    block.addBlock(describe)
+    block.add(describe)
     this.addUncaughtException(block)
 
     return block.build()
@@ -152,39 +152,39 @@ export class CodeGeneratorCypress {
 
   addUncaughtException(block){
     if(this.options.ignoreUncaughtExceptions){
-        block.addLine({value: `Cypress.on('uncaught:exception', (err, runnable) => {`})
-        block.addLine({value: `  return false`})
-        block.addLine({value: `})`})
+        block.add(`Cypress.on('uncaught:exception', (err, runnable) => {`)
+        block.add(`  return false`)
+        block.add(`})`)
     }
   }
 
   addImports(block){
-    //block.addLine({value: `import xxx from 'xxx';`})
+    //block.add(`import xxx from 'xxx';`)
   }
 
   addGlobalVariables(block){
     //Example
-    //block.addLine({value: `let xxx = {};`})
+    //block.add(`let xxx = {};`)
   }
 
   addGlobalMethods(block){
 
     let getStringBlock = new GetStringBlock({indent: block.getIndent()});
-    block.addBlock(getStringBlock)
+    block.add(getStringBlock)
     const storage = JSON.parse(this.options.localStorage)
     if(Object.keys(storage).length > 0){
-        block.addLine({value: ``})
+        block.add(``)
         let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage", async: false})
         for (let key in storage) {
             let keyValue = storage[key]
             if(typeof(keyValue) === "object"){
                 keyValue = JSON.stringify(keyValue);
-                method.addLine({ value: `localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+                method.add(`localStorage.setItem("${key}", JSON.stringify(${keyValue}))`)
             } else {
-                method.addLine({ value: `localStorage.setItem("${key}", "${keyValue}")`})
+                method.add(`localStorage.setItem("${key}", "${keyValue}")`)
             }
         }
-        block.addBlock(method)
+        block.add(method)
     }
   }
 
@@ -198,7 +198,7 @@ export class CodeGeneratorCypress {
       delete cookieOptions.name;
       delete cookieOptions.value;
       cookieOptions = JSON.stringify(cookieOptions);
-      block.addLine({value: `cy.setCookie("${name}", "${value}", ${cookieOptions})`})
+      block.add(`cy.setCookie("${name}", "${value}", ${cookieOptions})`)
     }
   }
 

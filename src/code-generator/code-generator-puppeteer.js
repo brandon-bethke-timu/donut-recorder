@@ -8,6 +8,7 @@ import BaseHandler from './base-handler'
 import GetStringBlock from './block/get-string-block'
 import MethodBlock from './block/method-block'
 import IfBlock from "./block/if-block"
+import Variable from "./block/variable"
 import {global} from './global-settings'
 
 export const options = [
@@ -22,7 +23,7 @@ class KeyDownHandler extends BaseHandler {
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else {
-            block.addLine({value: `await type('${selector}', '${key}', true)`})
+            block.add(`await type('${selector}', '${key}', true)`)
         }
     }
 }
@@ -31,7 +32,7 @@ class WaitForSelectorHandler extends BaseHandler {
     handle(block, events, current){
         let { target } = events[current]
         const selector = target.selector;
-        block.addLine({ value: `await page.waitFor('${selector}', {visible: true})` })
+        block.add(`await page.waitFor('${selector}', {visible: true})`)
     }
 }
 
@@ -43,9 +44,9 @@ class WaitForTextHandler extends BaseHandler {
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
         if(isExpression){
-            block.addLine({ value: `await page.waitFor("//${tagName}[normalize-space() = \" + ${innerText} + \"]", {visible: true})`})
+            block.add(`await page.waitFor("//${tagName}[normalize-space() = \" + ${innerText} + \"]", {visible: true})`)
         } else {
-            block.addLine({ value: `await page.waitFor("//${tagName}[normalize-space() = ${innerText}]", {visible: true})`})
+            block.add(`await page.waitFor("//${tagName}[normalize-space() = ${innerText}]", {visible: true})`)
         }
     }
 }
@@ -58,9 +59,9 @@ class ClickTextHandler extends BaseHandler {
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
         if(isExpression){
-            block.addLine({ value: `await click("//${tagName}[normalize-space() = \" + ${innerText} + \"]")`})
+            block.add(`await click("//${tagName}[normalize-space() = \" + ${innerText} + \"]")`)
         } else {
-            block.addLine({ value: `await click("//${tagName}[normalize-space() = ${innerText}]")`})
+            block.add(`await click("//${tagName}[normalize-space() = ${innerText}]")`)
         }
     }
 }
@@ -70,7 +71,7 @@ class TypeTextHandler extends BaseHandler {
         let { value, target} = events[current]
         const selector = target.selector;
         value = this.format(value);
-        block.addLine({ value: `await type('${selector}', ${value})` })
+        block.add(`await type('${selector}', ${value})`)
     }
 }
 
@@ -78,7 +79,7 @@ class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
         let { target } = events[current]
         const selector = target.selector;
-        block.addLine({ value: `await click('${selector}')`})
+        block.add(`await click('${selector}')`)
     }
 }
 
@@ -87,7 +88,7 @@ class ChangeHandler extends BaseHandler {
         let { value, target} = events[current]
         const selector = target.selector;
         if(target.tagName === "SELECT"){
-            block.addLine({ value: `await page.select('${selector}', '${value}')` })
+            block.add(`await page.select('${selector}', '${value}')`)
         }
     }
 }
@@ -95,7 +96,7 @@ class ChangeHandler extends BaseHandler {
 class WaitHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
-        block.addLine({ value: `await page.waitFor(${value});`})
+        block.add(`await page.waitFor(${value});`)
     }
 }
 
@@ -103,14 +104,14 @@ class GotoHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
         value = this.format(value)
-        block.addLine({ value: `await page.goto(${value})` })
+        block.add(`await page.goto(${value})`)
     }
 }
 
 class ViewportHandler extends BaseHandler {
     handle(block, events, current){
         let { value } = events[current]
-        block.addLine({ value: `await page.setViewport({ width: ${value.width}, height: ${value.height} })` })
+        block.add(`await page.setViewport({ width: ${value.width}, height: ${value.height} })`)
     }
 }
 
@@ -118,7 +119,7 @@ class VariableHandler extends BaseHandler {
     handle(block, events, current){
         let { name, value } = events[current]
         value = this.format(value)
-        block.addLine({value: `let ${name} = ${value}`})
+        block.add(`let ${name} = ${value}`)
     }
 }
 
@@ -142,95 +143,95 @@ export class CodeGeneratorPuppeteer {
   }
 
   generate (events) {
-    let block = new Block()
+    let block = new Block({indent: 0})
     this.addImports(block)
     let body = block;
-    block.addLine({value: ``})
+    block.add(``)
     if(!this._options.mocha){
         body = new AsyncBlock();
-        block.addBlock(body)
+        block.add(body)
     }
     this.addGlobalVariables(body)
-    body.addLine({value: ``})
+    body.add(``)
     this.addGlobalMethods(body)
-    body.addLine({value: ``})
+    body.add(``)
 
     if(this._options.mocha){
-        let describe = new DescribeBlock({indent: 0})
-        body.addBlock(describe)
-        let it = new ItBlock({indent: 1})
-        describe.addLine({value: ``})
-        describe.addBlock(it)
+        let describe = new DescribeBlock()
+        body.add(describe)
+        let it = new ItBlock()
+        describe.add(``)
+        describe.add(it)
         this.addSetup(it)
         this.addEvents(it, events)
         let after = new AfterBlock({indent: 1});
-        after.addLine({value: `browser.close()`})
-        describe.addLine({value: ``})
-        describe.addBlock(after)
+        after.add(`browser.close()`)
+        describe.add(``)
+        describe.add(after)
     } else {
         this.addSetup(body)
         this.addEvents(body, events)
-        body.addLine({value: `browser.close()`})
+        body.add(`browser.close()`)
     }
     return block.build()
   }
 
   addImports(block){
-    block.addLine({value: `import puppeteer from 'puppeteer';`})
+    block.add(`import puppeteer from 'puppeteer';`)
   }
 
   addGlobalVariables(block){
-    block.addLine({value: `let browser = undefined;`})
-    block.addLine({value: `let page = undefined;`})
+      block.add(new Variable({name: "browser"}))
+      block.add(new Variable({name: "page"}))
   }
 
   addGlobalMethods(block){
     let method = new MethodBlock({indent: block.getIndent(), name: "click"})
-    method.addLine({value: `let e = await page.waitFor(path, {visible: true})`})
-    method.addLine({value: `await e.click()`})
-    block.addBlock(method)
-    block.addLine({value: ''})
+    method.add(`let e = await page.waitFor(path, {visible: true})`)
+    method.add(`await e.click()`)
+    block.add(method)
+    block.add('')
 
     method = new MethodBlock({indent: block.getIndent(), name: "type", params: ["path", "message", "press"]})
-    method.addLine({value: `let e = await page.waitFor(path, {visible: true})`})
-    let ifBlock = new IfBlock({indent: method.getIndent(), condition: "press"})
-    ifBlock.addLine({value: `await e.press(message)`})
+    method.add(`let e = await page.waitFor(path, {visible: true})`)
+    let ifBlock = new IfBlock({indent: method.getIndent() + 1, condition: "press"})
+    ifBlock.add(`await e.press(message)`)
     let elseBlock = ifBlock.else({indent: method.getIndent()});
-    elseBlock.addLine({value: `await e.type(message, {delay: ${this._options.typingDelay}})`})
-    method.addBlock(ifBlock)
-    block.addBlock(method)
-    block.addLine({value: ''})
+    elseBlock.add(`await e.type(message, {delay: ${this._options.typingDelay}})`)
+    method.add(ifBlock)
+    block.add(method)
+    block.add('')
 
     let getStringBlock = new GetStringBlock({indent: block.getIndent()});
-    block.addBlock(getStringBlock)
+    block.add(getStringBlock)
 
     var storage = JSON.parse(this._options.localStorage)
     if(Object.keys(storage).length > 0){
-      block.addLine({value: ``})
+      block.add(``)
       let method = new MethodBlock({indent: block.getIndent(), name: "setLocalStorage"})
-      method.addLine({ value: `await page.evaluate(() => {`})
+      method.add(`await page.evaluate(() => {`)
       for (var key in storage) {
         var keyValue = storage[key]
         if(typeof(keyValue) === "object"){
             keyValue = JSON.stringify(keyValue);
-            method.addLine({ value: `  localStorage.setItem("${key}", JSON.stringify(${keyValue}))`})
+            method.add(`  localStorage.setItem("${key}", JSON.stringify(${keyValue}))`)
         } else {
-            method.addLine({ value: `  localStorage.setItem("${key}", "${keyValue}")`})
+            method.add(`  localStorage.setItem("${key}", "${keyValue}")`)
         }
       }
-      method.addLine({ value: `})`})
-      block.addBlock(method)
+      method.add(`})`)
+      block.add(method)
     }
   }
 
   addSetup(block){
-    block.addLine({value: `browser = await puppeteer.launch( {headless: ${this._options.headless}} );`})
-    block.addLine({value: `page = await browser.newPage();`})
+    block.add(`browser = await puppeteer.launch( {headless: ${this._options.headless}} )`)
+    block.add(`page = await browser.newPage()`)
 
     var cookies = JSON.parse(this._options.cookies)
     for (var key in cookies) {
       var keyValue = JSON.stringify(cookies[key])
-      block.addLine({value: `await page.setCookie(${keyValue})`})
+      block.add(`await page.setCookie(${keyValue})`)
     }
   }
 

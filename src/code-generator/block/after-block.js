@@ -1,14 +1,18 @@
 import ScopedBlock from './scoped-block'
+import Line from "./line"
 export default class AfterBlock extends ScopedBlock {
     constructor({indent, async} = {}){
         super({indent})
-        async = async === undefined ? true : async
-        if(async){
-            this._lines.unshift(this.indent({value: `after(async function(){`}))
+        this.async = async === undefined ? true : async
+    }
+
+    build(){
+        if(this.async){
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `after(async function(){`}))
         } else {
-            this._lines.unshift(this.indent({value: `after(function(){`}))
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `after(function(){`}))
         }
-        this._lines.push(this.indent({value: `})`}))
-        this.setIndent(this._indent + 1)
+        this._lines.push(new Line({indent: this.getIndent(), value: `})`}))
+        return super.build();
     }
 }

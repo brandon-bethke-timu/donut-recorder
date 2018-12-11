@@ -1,14 +1,20 @@
 import ScopedBlock from './scoped-block'
+import Line from "./line"
+
 export default class ItBlock extends ScopedBlock {
-    constructor({indent, async} = {}){
+    constructor({name, indent, async} = {}){
         super({indent})
-        async = async === undefined ? true : async
-        if(async){
-            this._lines.unshift(this.indent({value: `it("", async function(){`}))
+        this.name = name ? name : ""
+        this.async = async === undefined ? true : async
+    }
+
+    build(){        
+        if(this.async){
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `it("${this.name}", async function(){`}))
         } else {
-            this._lines.unshift(this.indent({value: `it("", function(){`}))
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `it("${this.name}", function(){`}))
         }
-        this._lines.push(this.indent({value: `})`}))
-        this.setIndent(this._indent + 1)
+        this._lines.push(new Line({indent: this.getIndent(), value: `})`}))
+        return super.build();
     }
 }

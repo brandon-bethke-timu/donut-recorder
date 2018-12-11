@@ -1,18 +1,34 @@
-export default Line {
-    constructor({value, terminator}){
-        this._terminator = terminator ? terminator : ''
+export default class Line {
+    constructor({indent, value, terminator, newline} = {}){
+        this.indent = indent ? indent : 0
+        this.terminator = terminator ? terminator : ''
         this.line = value;
+        this.newline = newline ? newline : '\n'
+    }
+
+    getIndent(){
+        return this.indent
     }
 
     getTerminator(){
-        return this._terminator;
+        return this.terminator
     }
 
     setTerminator(terminator){
-        this._terminator = terminator;
+        this.terminator = terminator
     }
 
-    getLine(){
-        return this.line + this.getTerminator();
+    indentation(){
+        let indentation = "";
+        if(this.indent && this.indent > 0){
+          for(let i = 0; i < this.indent; i++){
+            indentation = indentation + "  "
+          }
+        }
+        return indentation;
+    }
+
+    build(){
+        return this.indentation() + this.line + this.getTerminator() + this.newline
     }
 }

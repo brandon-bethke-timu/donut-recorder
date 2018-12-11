@@ -1,18 +1,24 @@
 import ScopedBlock from './scoped-block'
+import Line from "./line"
 export default class MethodBlock extends ScopedBlock {
     constructor({indent, async, name, params} = {}){
         super({indent})
-        async = async === undefined ? true : async
+        this.async = async === undefined ? true : async
+        this.name = name
+        this.params = params
+    }
+
+    build(){
         let methodParams = ""
-        if(params){
-            methodParams = params.join(", ")
+        if(this.params){
+            methodParams = this.params.join(", ")
         }
-        if(async){
-            this._lines.unshift(this.indent({value: `const ${name} = async function(${methodParams}){`}))
+        if(this.async){
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `const ${this.name} = async function(${methodParams}){`}))
         } else {
-            this._lines.unshift(this.indent({value: `const ${name} = function(${methodParams}){`}))
+            this._lines.unshift(new Line({indent: this.getIndent(), value: `const ${this.name} = function(${methodParams}){`}))
         }
-        this._lines.push(this.indent({value: `})`}))
-        this.setIndent(this._indent + 1)
+        this._lines.push(new Line({indent: this.getIndent(), value: `})`}))
+        return super.build();
     }
 }

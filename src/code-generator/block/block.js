@@ -1,19 +1,20 @@
+import Line from "./line"
+
 export default class Block {
   constructor ({indent} = {}) {
-      this._indent = indent ? indent : 0
+      this._indent = indent
       this._lines = []
   }
 
-  addLineToTop (line) {
-    this._lines.unshift(this.indent(line))
-  }
-
-  addLine (line) {
-      this._lines.push(this.indent(line))
-  }
-
-  addBlock(block){
-      this._lines.push(block)
+  add(item){
+      if(typeof(item) === "string"){
+          this._lines.push(new Line({indent: this.getIndent(), value: item}))
+      } else {
+          if(item.getIndent() === undefined){
+              item.setIndent(this.getIndent())
+          }
+          this._lines.push(item)
+      }
   }
 
   setIndent(indent){
@@ -24,15 +25,14 @@ export default class Block {
       return this._indent;
   }
 
-  indent(line){
+  indentation(line){
       let indentation = "";
       if(this._indent && this._indent > 0){
         for(let i = 0; i < this._indent; i++){
           indentation = indentation + "  ";
         }
       }
-      line.value = indentation + line.value
-      return line
+      return indentation;
   }
 
   getLines () {
@@ -42,13 +42,16 @@ export default class Block {
   build() {
       let lines = this.getLines();
       let script = ''
+      let indentation = this.indentation();
       let total = lines.length;
       for(let i = 0; i < total; i++){
           let line = lines[i];
-          if(line instanceof Block){
+          if(line instanceof Line){
+              script = script + line.build()
+          } else if(line instanceof Block){
               script = script + line.build()
           } else {
-              script = script + line.value + "\n"
+              script = script + indentation + line.value + "\n"
           }
       }
       return script
