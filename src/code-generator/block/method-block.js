@@ -1,6 +1,6 @@
-import ScopedBlock from './scoped-block'
+import IndentedBlock from './indented-block'
 import Line from "./line"
-export default class MethodBlock extends ScopedBlock {
+export default class MethodBlock extends IndentedBlock {
     constructor({indent, async, name, params} = {}){
         super({indent})
         this.async = async === undefined ? true : async

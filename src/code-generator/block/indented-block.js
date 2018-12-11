@@ -1,15 +1,7 @@
 import Block from './block'
 import Line from './line'
 
-export default class ScopedBlock extends Block {
-    add (item) {
-        if(typeof(item) === "string"){
-            this._lines.push(new Line({value: item}))
-        } else {
-            super.add(item)
-        }
-    }
-
+export default class IndentedBlock extends Block {
     build() {
         let lines = this.getLines();
         let total = lines.length;

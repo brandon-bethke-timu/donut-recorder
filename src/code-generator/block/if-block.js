@@ -1,8 +1,8 @@
 import Block from './block'
-import ScopedBlock from './scoped-block'
+import IndentedBlock from './indented-block'
 import Line from "./line"
 
-export default class IfBlock extends ScopedBlock {
+export default class IfBlock extends IndentedBlock {
     constructor({indent, condition} = {}){
         super({indent})
         this.condition = condition;
@@ -43,7 +43,7 @@ export default class IfBlock extends ScopedBlock {
     }
 }
 
-class ElseIfBlock extends ScopedBlock {
+class ElseIfBlock extends IndentedBlock {
     constructor({indent, condition} = {}){
         super({indent})
         this.condition = condition
@@ -56,7 +56,7 @@ class ElseIfBlock extends ScopedBlock {
     }
 }
 
-class ElseBlock extends ScopedBlock {
+class ElseBlock extends IndentedBlock {
     constructor({indent} = {}){
         super({indent})
     }

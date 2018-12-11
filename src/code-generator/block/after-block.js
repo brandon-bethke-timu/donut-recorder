@@ -1,6 +1,6 @@
-import ScopedBlock from './scoped-block'
+import IndentedBlock from './indented-block'
 import Line from "./line"
-export default class AfterBlock extends ScopedBlock {
+export default class AfterBlock extends IndentedBlock {
     constructor({indent, async} = {}){
         super({indent})
         this.async = async === undefined ? true : async
