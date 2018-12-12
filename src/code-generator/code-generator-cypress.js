@@ -1,6 +1,7 @@
 import messageActions from './message-actions'
 import Block from './block/block'
 import DescribeBlock from './block/describe-block'
+import ItBlock from './block/it-block'
 import GetStringBlock from './block/get-string-block'
 import BaseHandler from './base-handler'
 import MethodBlock from './block/method-block'
@@ -142,8 +143,11 @@ export class CodeGeneratorCypress {
     this.addGlobalMethods(block)
     block.add('')
     let describe = new DescribeBlock()
-    this.addSetup(describe)
-    this.addEvents(describe, events)
+    let it = new ItBlock()
+    describe.add(``)
+    describe.add(it)
+    this.addSetup(it)
+    this.addEvents(it, events)
     block.add(describe)
     this.addUncaughtException(block)
 
