@@ -40,7 +40,7 @@ The following code generators are included:
 
 - Puppeteer
 
-  Outputs the recorded events for use with [Puppeteer](https://pptr.dev/)
+  Outputs the recorded events for use with [Puppeteer](https://pptr.dev/).
   Can be configured to output in [Mocha](https://mochajs.org/) format
 
 - YAML

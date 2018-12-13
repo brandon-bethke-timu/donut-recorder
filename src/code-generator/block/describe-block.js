@@ -5,7 +5,7 @@ export default class DescribeBlock extends IndentedBlock {
     constructor({name, indent, async} = {}){
         super({indent})
         this.name = name ? name : ""
-        async = async === undefined ? true : async
+        this.async = async === undefined ? true : async
     }
 
     build(){
