@@ -18,7 +18,7 @@ export default class MethodBlock extends IndentedBlock {
         } else {
             this._lines.unshift(new Line({indent: this.getIndent(), value: `const ${this.name} = function(${methodParams}){`}))
         }
-        this._lines.push(new Line({indent: this.getIndent(), value: `})`}))
+        this._lines.push(new Line({indent: this.getIndent(), value: `}`}))
         return super.build();
     }
 }
