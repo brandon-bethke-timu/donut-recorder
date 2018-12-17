@@ -19,10 +19,10 @@ class KeyDownHandler extends BaseHandler {
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else if (keyCode == 13) {
-            block.add(`cy.get('${selector}').type('{enter}', {delay: ${this.options.typingDelay}})`)
+            block.add(`cy.get('${selector}').type('{enter}', {force: true, delay: ${this.options.typingDelay}})`)
         } else {
             key = this.format(key)
-            block.add(`cy.get('${selector}').type('${key}', {delay: ${this.options.typingDelay}})`)
+            block.add(`cy.get('${selector}').type('${key}', {force: true, delay: ${this.options.typingDelay}})`)
         }
     }
 }
@@ -58,9 +58,9 @@ class ClickTextHandler extends BaseHandler {
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
         if(isExpression){
-            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").click()`)
+            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").click({force: true})`)
         } else {
-            block.add(`cy.get("${tagName}:contains(${innerText})").click()`)
+            block.add(`cy.get("${tagName}:contains(${innerText})").click({force: true})`)
         }
     }
 }
@@ -70,7 +70,7 @@ class TypeTextHandler extends BaseHandler {
         let { value, target} = events[current]
         const selector = target.selector;
         value = this.format(value);
-        block.add(`cy.get('${selector}').type(${value}, {delay: ${this.options.typingDelay}})`)
+        block.add(`cy.get('${selector}').type(${value}, {force: true, delay: ${this.options.typingDelay}})`)
     }
 }
 
@@ -78,7 +78,7 @@ class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
         let { target } = events[current]
         const selector = target.selector;
-        block.add(`cy.get("${selector}").click()`)
+        block.add(`cy.get("${selector}").click({force: true})`)
     }
 }
 
