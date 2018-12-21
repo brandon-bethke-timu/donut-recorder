@@ -21,7 +21,6 @@ class KeyDownHandler extends BaseHandler {
         } else if (keyCode == 13) {
             block.add(`cy.get('${selector}').type('{enter}', {force: true, delay: ${this.options.typingDelay}})`)
         } else {
-            key = this.format(key)
             block.add(`cy.get('${selector}').type('${key}', {force: true, delay: ${this.options.typingDelay}})`)
         }
     }
