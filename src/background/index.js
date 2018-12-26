@@ -179,9 +179,20 @@ class RecordingController {
 
     if(!this._isPaused && msg.action === 'keydown' && msg.keyCode === 18 && recordingLength > 1){
 
+      let selector = msg.target.selector;
+
       for(let i = recordingLength - 1; i >= 0; i--){
-        if(this._recording[i].action === 'keydown'){
+        let prevItem = this._recording[i];
+        let prevPrevItem = this._recording[i - 1]
+
+        if(prevItem.action === 'keydown' && prevItem.target.selector == selector){
           this._recording.splice(i, 1)
+        }
+        else if(prevItem.action === 'mousemove' && prevPrevItem && prevPrevItem.action === 'keydown' && prevPrevItem.target.selector == selector){
+          this._recording.splice(i, 1)
+        }
+        else {
+          break
         }
       }
       msg.action = 'type-text*'
