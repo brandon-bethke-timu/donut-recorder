@@ -4,12 +4,12 @@
             <div class="event-property-names">
                 <div><label>Name:</label></div>
                 <div><label>Value:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.name" type="textbox" v-on:change="save(event)"></div>
-                <div>
-                    <input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)">
-                </div>
+                <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
             <div>
             </div>
@@ -17,19 +17,25 @@
         <div v-show="event.action === 'wait*'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Timeout:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'type-text*'" class="event-property-table">
             <div class="event-property-names">
+                <div><label>Clear</label></div>
                 <div><label>Selector:</label></div>
                 <div><label>Text:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.clear" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'goto*'" class="event-property-table">
@@ -37,41 +43,50 @@
             <div class="event-property-names">
                 <div><label>Set Local Storage:</label></div>
                 <div><label>URL:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.setLocalStorage" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change=""></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'viewport*'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Width:</label></div>
                 <div><label>Height:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.value.width" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value.height" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'wait-for-text*'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Inner Text:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.target.innerText" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'click-text*'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Inner Text:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.target.innerText" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'mousedown'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Inner Text:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
@@ -80,9 +95,11 @@
         <div v-if="event.action === 'keydown'" class="event-property-table">
             <div class="event-property-names">
                 <div><label>Key:</label></div>
+                <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.key" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
     </div>

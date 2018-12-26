@@ -15,7 +15,10 @@ export const options = [
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { key, keyCode, target } = events[current]
+        let { key, keyCode, target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else if (keyCode == 13) {
@@ -28,7 +31,10 @@ class KeyDownHandler extends BaseHandler {
 
 class WaitForSelectorHandler extends BaseHandler {
     handle(block, events, current){
-        let { target } = events[current]
+        let { target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const selector = target.selector;
         block.add(`cy.get('${selector}').should('be.visible')`)
     }
@@ -36,7 +42,10 @@ class WaitForSelectorHandler extends BaseHandler {
 
 class WaitForTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { target } = events[current]
+        let { target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const tagName = target.tagName;
         let innerText = target.innerText;
         const isExpression = this.isExpression(innerText)
@@ -51,7 +60,10 @@ class WaitForTextHandler extends BaseHandler {
 
 class ClickTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { target } = events[current]
+        let { target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const tagName = target.tagName;
         let innerText = target.innerText;
         const isExpression = this.isExpression(innerText)
@@ -66,7 +78,10 @@ class ClickTextHandler extends BaseHandler {
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target, clear } = events[current]
+        let { value, target, clear, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const selector = target.selector;
         value = this.format(value);
         if(clear){
@@ -78,7 +93,10 @@ class TypeTextHandler extends BaseHandler {
 
 class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { target } = events[current]
+        let { target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const selector = target.selector;
         block.add(`cy.get("${selector}").click({force: true})`)
     }
@@ -86,7 +104,10 @@ class MouseDownHandler extends BaseHandler {
 
 class ChangeHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target} = events[current]
+        let { value, target, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         const selector = target.selector;
         if(target.tagName === "SELECT"){
             block.add(`cy.get('${selector}').select('${value}')`)
@@ -96,14 +117,20 @@ class ChangeHandler extends BaseHandler {
 
 class WaitHandler extends BaseHandler {
     handle(block, events, current){
-        let { value } = events[current]
+        let { value, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         block.add(`cy.wait(${value})`)
     }
 }
 
 class GotoHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, setLocalStorage } = events[current]
+        let { value, setLocalStorage, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         value = this.format(value)
         block.add(`cy.visit(${value})`)
         if(setLocalStorage){
@@ -114,7 +141,10 @@ class GotoHandler extends BaseHandler {
 
 class VariableHandler extends BaseHandler {
     handle(block, events, current){
-        let { name, value } = events[current]
+        let { name, value, comment } = events[current]
+        if(comment){
+            block.add(`// ${comment}`)
+        }
         value = this.format(value)
         block.add(`let ${name} = ${value}`)
     }

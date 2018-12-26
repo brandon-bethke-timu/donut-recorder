@@ -18,6 +18,7 @@
               {{index + 1}}.
             </div>
             <div class="event-description">
+              <div class="text-muted">{{event.comment}}</div>
               <div class="event-action">{{event.action}}</div>
               <div class="event-props text-muted">{{parseEventValue(event)}}</div>
             </div>
@@ -224,7 +225,7 @@
             border-top: 1px solid $gray-light;
             display: flex;
             flex: 1 1 auto;
-            height: 32px;
+            height: 44px;
 
             .event-label {
               vertical-align: top;
