@@ -186,6 +186,7 @@ class RecordingController {
       }
       msg.action = 'type-text*'
       msg.keyCode = undefined
+      msg.clear = false
     }
 
     if(!this._isPaused && msg.action === 'keydown' && msg.keyCode == 17 && recordingLength > 1){

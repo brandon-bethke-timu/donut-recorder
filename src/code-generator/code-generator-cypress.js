@@ -66,9 +66,12 @@ class ClickTextHandler extends BaseHandler {
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target} = events[current]
+        let { value, target, clear } = events[current]
         const selector = target.selector;
         value = this.format(value);
+        if(clear){
+            block.add(`cy.get('${selector}').clear({force: true})`)
+        }
         block.add(`cy.get('${selector}').type(${value}, {force: true, delay: ${this.options.typingDelay}})`)
     }
 }

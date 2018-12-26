@@ -24,10 +24,12 @@
         </div>
         <div v-if="event.action === 'type-text*'" class="event-property-table">
             <div class="event-property-names">
+                <div><label>Clear</label></div>
                 <div><label>Selector:</label></div>
                 <div><label>Text:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.clear" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
             </div>

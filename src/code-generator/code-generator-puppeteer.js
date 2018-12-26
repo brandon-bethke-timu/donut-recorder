@@ -69,9 +69,15 @@ class ClickTextHandler extends BaseHandler {
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target} = events[current]
+        let { value, target, clear } = events[current]
         const selector = target.selector;
         value = this.format(value);
+        if(clear){
+            block.add(`const inputValue = await page.$eval('${selector}', el => el.value);`)
+            block.add(`for (let i = 0; i < inputValue.length; i++) {`)
+            block.add(`  await page.press('Backspace')`)
+            block.add(`}`)
+        }
         block.add(`await type('${selector}', ${value})`)
     }
 }
