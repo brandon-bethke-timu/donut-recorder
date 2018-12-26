@@ -141,7 +141,7 @@
         this.showNewEvent = false
       },
       visitUrl(){
-        this.newEvent = {id: uuid(), action: "goto*", value: ""}
+        this.newEvent = {id: uuid(), action: "goto*", value: "", setLocalStorage: false}
         this.showNewEvent = true
         this.showDetails = false
       },

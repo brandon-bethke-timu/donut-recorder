@@ -75,9 +75,9 @@ class RecordingController {
 
   newEvent(msg){
       this._recording.push(msg.event);
-      if(msg.event.action === "goto*"){
-          chrome.tabs.update(undefined, {url: msg.event.value})
-      }
+      //if(msg.event.action === "goto*"){
+      //    chrome.tabs.update(undefined, {url: msg.event.value})
+      //}
       chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
   }
 
@@ -182,13 +182,16 @@ class RecordingController {
       let selector = msg.target.selector;
 
       for(let i = recordingLength - 1; i >= 0; i--){
-        let prevItem = this._recording[i];
-        let prevPrevItem = this._recording[i - 1]
+        let item = this._recording[i];
+        let prevItem = this._recording[i - 1]
 
-        if(prevItem.action === 'keydown' && prevItem.target.selector == selector){
+        if(item.action === 'keydown' && item.target.selector == selector){
           this._recording.splice(i, 1)
         }
-        else if(prevItem.action === 'mousemove' && prevPrevItem && prevPrevItem.action === 'keydown' && prevPrevItem.target.selector == selector){
+        else if(item.action === 'mousemove' && prevItem && prevItem.action === 'keydown' && prevItem.target.selector == selector){
+          this._recording.splice(i, 1)
+        }
+        else if(item.action === 'mousedown' && prevItem && prevItem.action === 'keydown' && prevItem.target.selector == selector){
           this._recording.splice(i, 1)
         }
         else {

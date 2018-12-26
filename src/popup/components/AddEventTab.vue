@@ -35,9 +35,11 @@
         <div v-if="event.action === 'goto*'" class="event-property-table">
             <div><button v-on:click="saveNew(event)">Done</button></div>
             <div class="event-property-names">
+                <div><label>Set Local Storage:</label></div>
                 <div><label>URL:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.setLocalStorage" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change=""></div>
             </div>
         </div>

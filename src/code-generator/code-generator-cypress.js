@@ -103,9 +103,12 @@ class WaitHandler extends BaseHandler {
 
 class GotoHandler extends BaseHandler {
     handle(block, events, current){
-        let { value } = events[current]
+        let { value, setLocalStorage } = events[current]
         value = this.format(value)
         block.add(`cy.visit(${value})`)
+        if(setLocalStorage){
+            block.add(`setLocalStorage()`)
+        }
     }
 }
 
