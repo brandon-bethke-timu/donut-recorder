@@ -6,6 +6,7 @@ import AsyncBlock from './block/async-block'
 import DescribeBlock from './block/describe-block'
 import BaseHandler from './base-handler'
 import GetStringBlock from './block/get-string-block'
+import GetIntBlock from './block/get-int-block'
 import MethodBlock from './block/method-block'
 import IfBlock from "./block/if-block"
 import Variable from "./block/variable"
@@ -244,6 +245,9 @@ export class CodeGeneratorPuppeteer {
     method.add(ifBlock)
     block.add(method)
     block.add('')
+
+    let getIntBlock = new GetIntBlock();
+    block.add(getIntBlock)
 
     let getStringBlock = new GetStringBlock();
     block.add(getStringBlock)

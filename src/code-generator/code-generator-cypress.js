@@ -3,6 +3,7 @@ import Block from './block/block'
 import DescribeBlock from './block/describe-block'
 import ItBlock from './block/it-block'
 import GetStringBlock from './block/get-string-block'
+import GetIntBlock from './block/get-int-block'
 import BaseHandler from './base-handler'
 import MethodBlock from './block/method-block'
 import {global} from './global-settings'
@@ -208,6 +209,8 @@ export class CodeGeneratorCypress {
 
   addGlobalMethods(block){
 
+    let getIntBlock = new GetIntBlock();
+    block.add(getIntBlock)
     let getStringBlock = new GetStringBlock();
     block.add(getStringBlock)
     const storage = JSON.parse(this.options.localStorage)
