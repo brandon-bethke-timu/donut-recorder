@@ -13,7 +13,8 @@
           :key="index"
           class="event-list-item"
           :class="getActiveClass(event, index)"
-          @mouseover="setActiveItem(event, index)">
+          @mouseover="setActiveItem(event, index)"
+          @mousedown="mousedownItem(event, index)">
             <div class="event-label">
               {{index + 1}}.
             </div>
@@ -68,7 +69,8 @@
         currentEvent: undefined,
         newEvent: undefined,
         options: { global },
-        activeIndex: undefined
+        activeIndex: undefined,
+        selectedIndex: undefined
       }
     },
     mounted () {
@@ -98,10 +100,26 @@
         this.sendMessage({ id: uuid(), action: 'click-on*' })
         this.scrollToEnd();
       },
+      visitUrl () {
+        this.sendMessage({id: uuid(), action: "goto*", value: "https://", setLocalStorage: false})
+        this.scrollToEnd();
+      },
       getActiveClass(event, index) {
+        if(this.selectedIndex == index){
+          return "selected-item"
+        }
         if(this.activeIndex == index){
           return "active-item"
         }
+      },
+      setSelectedItem(event, index) {
+        this.selectedIndex = index
+      },
+      mousedownItem(event, index) {
+        this.selectedIndex = index
+        this.activeIndex = index
+        this.currentEvent = event
+        this.showDetails = true
       },
       setActiveItem(event, index) {
         this.activeIndex = index;
@@ -112,6 +130,8 @@
         }
         this.liveEvents.splice(index, 1)
         this.insertItem(event, index - 1)
+        this.selectedIndex = index - 1
+        this.currentEvent = event;
       },
       moveItemDown(event, index){
         if(index + 1 === this.liveEvents.length){
@@ -119,10 +139,13 @@
         }
         this.liveEvents.splice(index, 1)
         this.insertItem(event, index + 1)
+        this.selectedIndex = index + 1
+        this.currentEvent = event;
       },
       insertItem(event, index){
         this.liveEvents.splice(index, 0, event)
         this.sendMessage({ action: 'insert-event', event, index })
+        this.selectedIndex = index
       },
       removeItem(event, index){
         if(event === this.currentEvent){
@@ -135,16 +158,13 @@
         }
         this.liveEvents.splice(index, 1)
         this.sendMessage({ action: 'remove-event', event })
+        this.selectedIndex = -1
       },
       editItem(event, index){
         this.currentEvent = event;
         this.showDetails = true
         this.showNewEvent = false
-      },
-      visitUrl(){
-        this.newEvent = {id: uuid(), action: "goto*", value: "", setLocalStorage: false}
-        this.showNewEvent = true
-        this.showDetails = false
+        this.selectedIndex = index
       },
       sendMessage(msg){
         try{
@@ -186,6 +206,11 @@
   }
 
   li.active-item {
+    background-color: aliceblue
+  }
+
+  li.selected-item {
+    background-color: antiquewhite
   }
 
   .recording-tab {

@@ -27,13 +27,10 @@ class RecordingController {
         if (msg.action === 'update-event') this.updateEvent(msg)
         if (msg.action === 'new-event') this.newEvent(msg)
         if (msg.action === 'get-recording') chrome.runtime.sendMessage({control: 'update-recording', recording: this._recording})
-        if (msg.action === 'variable*') this.variable(msg)
+        if (msg.action === 'variable*') this.handleMessage(msg)
+        if (msg.action === 'goto*') this.handleMessage(msg)
       })
     })
-  }
-
-  variable(msg) {
-    this.handleMessage(msg)
   }
 
   insertEvent(msg) {
