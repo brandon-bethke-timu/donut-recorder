@@ -32,6 +32,7 @@
                 <div><label>Clear:</label></div>
                 <div><label>Selector:</label></div>
                 <div><label>Text:</label></div>
+                <div><label>Delay:</label></div>
                 <div><label>Timeout:</label></div>
                 <div><label>Comment:</label></div>
             </div>
@@ -40,6 +41,7 @@
                 <div><input class="event-edit-property" v-model="event.clear" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.typingDelay" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.timeout" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
@@ -116,12 +118,14 @@
             <div class="event-property-names">
                 <div><label>Force:</label></div>
                 <div><label>Key:</label></div>
+                <div><label>Delay:</label></div>
                 <div><label>Timeout:</label></div>
                 <div><label>Comment:</label></div>
             </div>
             <div>
                 <div><input class="event-edit-property" v-model="event.force" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.key" type="textbox" v-on:change="save(event)"></div>
+                <div><input class="event-edit-property" v-model="event.typingDelay" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.timeout" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
@@ -164,7 +168,7 @@
 
     .edit-event {
         background: $gray-lightest;
-        height: 100px;
+        height: 150px;
         display: flex;
         justify-content: flex-start;
         align-items: center;

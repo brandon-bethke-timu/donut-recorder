@@ -16,7 +16,7 @@ export const options = [
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { key, keyCode, target, comment, force, timeout } = events[current]
+        let { key, keyCode, target, comment, force, timeout, typingDelay } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -28,7 +28,11 @@ class KeyDownHandler extends BaseHandler {
         if(timeout){
             options.timeout = timeout
         }
-        options.delay = this.options.typingDelay
+        if(typingDelay === undefined){
+            options.delay = this.options.typingDelay
+        } else {
+            options.delay = typingDelay
+        }
         let sOptions = JSON.stringify(options)
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
@@ -108,7 +112,7 @@ class ClickTextHandler extends BaseHandler {
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target, clear, comment, force, timeout } = events[current]
+        let { value, target, clear, comment, force, timeout, typingDelay } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -133,7 +137,11 @@ class TypeTextHandler extends BaseHandler {
         if(timeout){
             options.timeout = timeout
         }
-        options.delay = this.options.typingDelay
+        if(typingDelay === undefined){
+            options.delay = this.options.typingDelay
+        } else {
+            options.delay = typingDelay
+        }
         let sOptions = JSON.stringify(options)
         block.add(`cy.get('${selector}').type(${value}, ${sOptions})`)
     }
