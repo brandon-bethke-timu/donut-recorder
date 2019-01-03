@@ -16,16 +16,23 @@ export const options = [
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { key, keyCode, target, comment } = events[current]
+        let { key, keyCode, target, comment, force } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
+
+        let options = {}
+        if(force){
+            options.force = true
+        }
+        options.delay = this.options.typingDelay
+        let sOptions = JSON.stringify(options)
         const selector = target.selector;
         if (keyCode == 16 || keyCode == 17 || keyCode == 18) {
         } else if (keyCode == 13) {
-            block.add(`cy.get('${selector}').type('{enter}', {force: true, delay: ${this.options.typingDelay}})`)
+            block.add(`cy.get('${selector}').type('{enter}', ${sOptions})`)
         } else {
-            block.add(`cy.get('${selector}').type('${key}', {force: true, delay: ${this.options.typingDelay}})`)
+            block.add(`cy.get('${selector}').type('${key}', ${sOptions})`)
         }
     }
 }
@@ -61,7 +68,7 @@ class WaitForTextHandler extends BaseHandler {
 
 class ClickTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment } = events[current]
+        let { target, comment, force } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -69,37 +76,60 @@ class ClickTextHandler extends BaseHandler {
         let innerText = target.innerText;
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
+
+        let options = {}
+        if(force){
+            options.force = true
+        }
+        let sOptions = JSON.stringify(options)
         if(isExpression){
-            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").click({force: true})`)
+            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").click(${sOptions})`)
         } else {
-            block.add(`cy.get("${tagName}:contains(${innerText})").click({force: true})`)
+            block.add(`cy.get("${tagName}:contains(${innerText})").click(${sOptions})`)
         }
     }
 }
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target, clear, comment } = events[current]
+        let { value, target, clear, comment, force } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
         const selector = target.selector;
         value = this.format(value);
+
         if(clear){
-            block.add(`cy.get('${selector}').clear({force: true})`)
+            let options = {}
+            if(force){
+                options.force = true
+            }
+            let sOptions = JSON.stringify(options)
+            block.add(`cy.get('${selector}').clear(${sOptions})`)
         }
-        block.add(`cy.get('${selector}').type(${value}, {force: true, delay: ${this.options.typingDelay}})`)
+        let options = {}
+        if(force){
+            options.force = true
+        }
+        options.delay = this.options.typingDelay
+        let sOptions = JSON.stringify(options)
+        block.add(`cy.get('${selector}').type(${value}, ${sOptions})`)
     }
 }
 
 class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment } = events[current]
+        let { target, comment, force } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
         const selector = target.selector;
-        block.add(`cy.get("${selector}").click({force: true})`)
+        let options = {}
+        if(force){
+            options.force = true
+        }
+        let sOptions = JSON.stringify(options)
+        block.add(`cy.get("${selector}").click(${sOptions})`)
     }
 }
 

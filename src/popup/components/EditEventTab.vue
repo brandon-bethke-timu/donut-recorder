@@ -26,12 +26,14 @@
         </div>
         <div v-if="event.action === 'type-text*'" class="event-property-table">
             <div class="event-property-names">
-                <div><label>Clear</label></div>
+                <div><label>Force:</label></div>
+                <div><label>Clear:</label></div>
                 <div><label>Selector:</label></div>
                 <div><label>Text:</label></div>
                 <div><label>Comment:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.force" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.clear" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.value" type="textbox" v-on:change="save(event)"></div>
@@ -73,30 +75,36 @@
         </div>
         <div v-if="event.action === 'click-text*'" class="event-property-table">
             <div class="event-property-names">
+                <div><label>Force:</label></div>
                 <div><label>Inner Text:</label></div>
                 <div><label>Comment:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.force" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.innerText" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'mousedown'" class="event-property-table">
             <div class="event-property-names">
+                <div><label>Force:</label></div>
                 <div><label>Inner Text:</label></div>
                 <div><label>Comment:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.force" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.target.selector" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
         </div>
         <div v-if="event.action === 'keydown'" class="event-property-table">
             <div class="event-property-names">
+                <div><label>Force:</label></div>
                 <div><label>Key:</label></div>
                 <div><label>Comment:</label></div>
             </div>
             <div>
+                <div><input class="event-edit-property" v-model="event.force" type="checkbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.key" type="textbox" v-on:change="save(event)"></div>
                 <div><input class="event-edit-property" v-model="event.comment" type="textbox" v-on:change="save(event)"></div>
             </div>
