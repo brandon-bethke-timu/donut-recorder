@@ -16,7 +16,7 @@ export const options = [
 
 class KeyDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { key, keyCode, target, comment, force } = events[current]
+        let { key, keyCode, target, comment, force, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -24,6 +24,9 @@ class KeyDownHandler extends BaseHandler {
         let options = {}
         if(force){
             options.force = true
+        }
+        if(timeout){
+            options.timeout = timeout
         }
         options.delay = this.options.typingDelay
         let sOptions = JSON.stringify(options)
@@ -39,18 +42,23 @@ class KeyDownHandler extends BaseHandler {
 
 class WaitForSelectorHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment } = events[current]
+        let { target, comment, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
+        let options = {}
+        if(timeout){
+            options.timeout = timeout
+        }
+        let sOptions = JSON.stringify(options)
         const selector = target.selector;
-        block.add(`cy.get('${selector}').should('be.visible')`)
+        block.add(`cy.get('${selector}', ${sOptions}).should('be.visible')`)
     }
 }
 
 class WaitForTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment } = events[current]
+        let { target, comment, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -58,17 +66,22 @@ class WaitForTextHandler extends BaseHandler {
         let innerText = target.innerText;
         const isExpression = this.isExpression(innerText)
         innerText = this.format(innerText)
+        let options = {}
+        if(timeout){
+            options.timeout = timeout
+        }
+        let sOptions = JSON.stringify(options)
         if(isExpression){
-            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")").should('be.visible')`)
+            block.add(`cy.get("${tagName}:contains(\" + ${innerText} + \")", ${sOptions}).should('be.visible')`)
         } else {
-            block.add(`cy.get("${tagName}:contains(${innerText})").should('be.visible')`)
+            block.add(`cy.get("${tagName}:contains(${innerText})", ${sOptions}).should('be.visible')`)
         }
     }
 }
 
 class ClickTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment, force } = events[current]
+        let { target, comment, force, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -80,6 +93,9 @@ class ClickTextHandler extends BaseHandler {
         let options = {}
         if(force){
             options.force = true
+        }
+        if(timeout){
+            options.timeout = timeout
         }
         let sOptions = JSON.stringify(options)
         if(isExpression){
@@ -92,7 +108,7 @@ class ClickTextHandler extends BaseHandler {
 
 class TypeTextHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target, clear, comment, force } = events[current]
+        let { value, target, clear, comment, force, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -104,12 +120,18 @@ class TypeTextHandler extends BaseHandler {
             if(force){
                 options.force = true
             }
+            if(timeout){
+                options.timeout = timeout
+            }
             let sOptions = JSON.stringify(options)
             block.add(`cy.get('${selector}').clear(${sOptions})`)
         }
         let options = {}
         if(force){
             options.force = true
+        }
+        if(timeout){
+            options.timeout = timeout
         }
         options.delay = this.options.typingDelay
         let sOptions = JSON.stringify(options)
@@ -119,7 +141,7 @@ class TypeTextHandler extends BaseHandler {
 
 class MouseDownHandler extends BaseHandler {
     handle(block, events, current){
-        let { target, comment, force } = events[current]
+        let { target, comment, force, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
@@ -128,6 +150,9 @@ class MouseDownHandler extends BaseHandler {
         if(force){
             options.force = true
         }
+        if(timeout){
+            options.timeout = timeout
+        }
         let sOptions = JSON.stringify(options)
         block.add(`cy.get("${selector}").click(${sOptions})`)
     }
@@ -135,13 +160,18 @@ class MouseDownHandler extends BaseHandler {
 
 class ChangeHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, target, comment } = events[current]
+        let { value, target, comment, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
+        let options = {}
+        if(timeout){
+            options.timeout = timeout
+        }
+        let sOptions = JSON.stringify(options)
         const selector = target.selector;
         if(target.tagName === "SELECT"){
-            block.add(`cy.get('${selector}').select('${value}')`)
+            block.add(`cy.get('${selector}').select('${value}', ${sOptions})`)
         }
     }
 }
@@ -158,12 +188,17 @@ class WaitHandler extends BaseHandler {
 
 class GotoHandler extends BaseHandler {
     handle(block, events, current){
-        let { value, setLocalStorage, comment } = events[current]
+        let { value, setLocalStorage, comment, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
+        let options = {}
+        if(timeout){
+            options.timeout = timeout
+        }
+        let sOptions = JSON.stringify(options)
         value = this.format(value)
-        block.add(`cy.visit(${value})`)
+        block.add(`cy.visit(${value}, ${sOptions})`)
         if(setLocalStorage){
             block.add(`setLocalStorage()`)
         }
@@ -172,7 +207,7 @@ class GotoHandler extends BaseHandler {
 
 class VariableHandler extends BaseHandler {
     handle(block, events, current){
-        let { name, value, comment } = events[current]
+        let { name, value, comment, timeout } = events[current]
         if(comment){
             block.add(`// ${comment}`)
         }
